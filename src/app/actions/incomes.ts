@@ -92,7 +92,7 @@ export async function updateIncome(id: string, formData: FormData) {
   await prisma.income.update({
     where: { id },
     data: {
-      categoryId,
+      category: { connect: { id: categoryId } },
       monto,
       moneda,
       fecha,
