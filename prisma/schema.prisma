@@ -26,10 +26,10 @@ enum BudgetPeriod {
 
 enum PaymentMethod {
   efectivo
-  tarjeta_debito
+  cheque
+  transferencia_bancaria
+  cripto
   tarjeta_credito
-  transferencia
-  otro
 }
 
 model User {
@@ -138,15 +138,16 @@ model Expense {
 }
 
 model Income {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  categoryId  String   @map("category_id")
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  categoryId  String        @map("category_id")
   monto       Float
-  moneda      String   @default("ARS")
-  fecha       DateTime @default(now())
+  moneda      String        @default("ARS")
+  fecha       DateTime      @default(now())
   descripcion String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  medioPago   PaymentMethod @default(efectivo) @map("medio_pago")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
 
   user     User     @relation(fields: [userId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])

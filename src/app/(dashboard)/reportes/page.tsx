@@ -53,7 +53,7 @@ async function ReportsContent() {
       color: i.category.color,
       categoryId: i.categoryId,
       familyMember: null,
-      medioPago: null,
+      medioPago: i.medioPago,
     })),
   ].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
 

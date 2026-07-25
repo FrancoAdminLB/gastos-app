@@ -14,6 +14,13 @@ import {
 } from "@/components/ui/select";
 
 const CURRENCIES = ["ARS", "USD", "EUR", "BRL"];
+const PAYMENT_METHODS = [
+  { value: "efectivo", label: "Efectivo" },
+  { value: "cheque", label: "Cheque" },
+  { value: "transferencia_bancaria", label: "Transferencia" },
+  { value: "cripto", label: "Cripto" },
+  { value: "tarjeta_credito", label: "Tarjeta de Crédito" },
+];
 
 interface IncomeCategory {
   id: string;
@@ -104,13 +111,27 @@ export function IncomeForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Nota</Label>
-          <Input
-            name="descripcion"
-            placeholder="Opcional"
-            className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.2)] focus:border-[#4ADE80] focus:ring-[#4ADE80]/20"
-          />
+          <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Medio</Label>
+          <Select name="medioPago" defaultValue="efectivo">
+            <SelectTrigger className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-[#161B3D] border-[rgba(255,255,255,0.1)]">
+              {PAYMENT_METHODS.map((pm) => (
+                <SelectItem key={pm.value} value={pm.value}>{pm.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Nota</Label>
+        <Input
+          name="descripcion"
+          placeholder="Opcional"
+          className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.2)] focus:border-[#4ADE80] focus:ring-[#4ADE80]/20"
+        />
       </div>
 
       <Button

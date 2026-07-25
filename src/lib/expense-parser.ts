@@ -3,7 +3,7 @@ export interface ParsedExpense {
   moneda: string;
   comercio: string;
   fecha: Date;
-  medioPago: "tarjeta_debito" | "tarjeta_credito" | "transferencia" | "efectivo" | "otro";
+  medioPago: "efectivo" | "cheque" | "transferencia_bancaria" | "cripto" | "tarjeta_credito";
   fuente: string; // "mercadopago" | "visa" | "mastercard" | etc.
 }
 
@@ -36,7 +36,7 @@ function parseMercadoPago(text: string): ParsedExpense | null {
       moneda: "ARS",
       comercio: cleanMerchant(pagaste[2]),
       fecha: new Date(),
-      medioPago: text.toLowerCase().includes("tarjeta") ? "tarjeta_debito" : "transferencia",
+      medioPago: text.toLowerCase().includes("tarjeta") ? "tarjeta_credito" : "transferencia_bancaria",
       fuente: "mercadopago",
     };
   }
@@ -51,7 +51,7 @@ function parseMercadoPago(text: string): ParsedExpense | null {
       moneda: "ARS",
       comercio: cleanMerchant(compra[2]),
       fecha: new Date(),
-      medioPago: "tarjeta_debito",
+      medioPago: "tarjeta_credito",
       fuente: "mercadopago",
     };
   }
@@ -67,7 +67,7 @@ function parseMercadoPago(text: string): ParsedExpense | null {
       moneda: "ARS",
       comercio: cleanMerchant(envio[2]),
       fecha: new Date(),
-      medioPago: "transferencia",
+      medioPago: "transferencia_bancaria",
       fuente: "mercadopago",
     };
   }
@@ -92,7 +92,7 @@ function parseCardPurchase(text: string): ParsedExpense | null {
       moneda: "ARS",
       comercio: cleanMerchant(aprobada[2]),
       fecha: new Date(),
-      medioPago: cardType.includes("deb") ? "tarjeta_debito" : "tarjeta_credito",
+      medioPago: "tarjeta_credito",
       fuente: cardType,
     };
   }
@@ -142,7 +142,7 @@ function parseBankTransfer(text: string): ParsedExpense | null {
       moneda: "ARS",
       comercio: cleanMerchant(transfer[2]),
       fecha: new Date(),
-      medioPago: "transferencia",
+      medioPago: "transferencia_bancaria",
       fuente: "banco",
     };
   }
@@ -170,7 +170,7 @@ function parseGeneric(text: string): ParsedExpense | null {
     moneda: isUSD ? "USD" : "ARS",
     comercio: cleanMerchant(comercio.substring(0, 50)),
     fecha: new Date(),
-    medioPago: "otro",
+    medioPago: "efectivo",
     fuente: "manual",
   };
 }

@@ -41,6 +41,7 @@ export async function createIncome(formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   const fecha = new Date(formData.get("fecha") as string);
   const descripcion = (formData.get("descripcion") as string) || null;
+  const medioPago = (formData.get("medioPago") as string) || "efectivo";
 
   await prisma.income.create({
     data: {
@@ -50,6 +51,7 @@ export async function createIncome(formData: FormData) {
       moneda,
       fecha,
       descripcion,
+      medioPago: medioPago as "efectivo" | "cheque" | "transferencia_bancaria" | "cripto" | "tarjeta_credito",
     },
   });
 
@@ -85,10 +87,18 @@ export async function updateIncome(id: string, formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   const fecha = new Date(formData.get("fecha") as string);
   const descripcion = (formData.get("descripcion") as string) || null;
+  const medioPago = (formData.get("medioPago") as string) || "efectivo";
 
   await prisma.income.update({
     where: { id },
-    data: { categoryId, monto, moneda, fecha, descripcion },
+    data: {
+      categoryId,
+      monto,
+      moneda,
+      fecha,
+      descripcion,
+      medioPago: medioPago as "efectivo" | "cheque" | "transferencia_bancaria" | "cripto" | "tarjeta_credito",
+    },
   });
 
   revalidateAll();

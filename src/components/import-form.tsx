@@ -38,7 +38,7 @@ interface PreviewData {
   moneda: string;
   comercio: string;
   fecha: string;
-  medioPago: "tarjeta_debito" | "tarjeta_credito" | "transferencia" | "efectivo" | "otro";
+  medioPago: "efectivo" | "cheque" | "transferencia_bancaria" | "cripto" | "tarjeta_credito";
   fuente: string;
   suggestedCategoryId: string | null;
   suggestedCategoryName: string | null;
@@ -46,10 +46,10 @@ interface PreviewData {
 
 const PAYMENT_LABELS: Record<string, string> = {
   efectivo: "Efectivo",
-  tarjeta_debito: "Debito",
-  tarjeta_credito: "Credito",
-  transferencia: "Transferencia",
-  otro: "Otro",
+  cheque: "Cheque",
+  transferencia_bancaria: "Transferencia",
+  cripto: "Cripto",
+  tarjeta_credito: "Tarjeta de Crédito",
 };
 
 export function ImportForm({ categories }: { categories: Category[] }) {

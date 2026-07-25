@@ -32,7 +32,7 @@ export async function confirmImport(data: {
   categoryId: string;
   fecha: string;
   descripcion: string;
-  medioPago: "tarjeta_debito" | "tarjeta_credito" | "transferencia" | "efectivo" | "otro";
+  medioPago: "efectivo" | "cheque" | "transferencia_bancaria" | "cripto" | "tarjeta_credito";
 }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");

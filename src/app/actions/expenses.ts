@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./auth";
 import { convertCurrency } from "@/lib/exchange";
 
-type PaymentMethod = "efectivo" | "tarjeta_debito" | "tarjeta_credito" | "transferencia" | "otro";
+type PaymentMethod = "efectivo" | "cheque" | "transferencia_bancaria" | "cripto" | "tarjeta_credito";
 
 const BASE_CURRENCY = "ARS";
 

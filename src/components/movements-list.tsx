@@ -37,6 +37,14 @@ interface Movement {
   medioPago?: string | null;
 }
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  efectivo: "Efectivo",
+  cheque: "Cheque",
+  transferencia_bancaria: "Transferencia",
+  cripto: "Cripto",
+  tarjeta_credito: "T. Crédito",
+};
+
 type Period = "mes" | "trimestre" | "ano";
 
 const PERIOD_LABELS: Record<Period, string> = {
@@ -90,10 +98,12 @@ function generatePdfHtml(movements: Movement[], periodLabel: string): string {
       const fecha = new Date(m.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
       const signo = m.tipo === "ingreso" ? "+" : "-";
       const color = m.tipo === "ingreso" ? "#16a34a" : "#dc2626";
+      const medio = m.medioPago ? (PAYMENT_METHOD_LABELS[m.medioPago] || m.medioPago) : "-";
       return `<tr>
         <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px">${fecha}</td>
         <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px">${m.tipo === "ingreso" ? "Ingreso" : "Egreso"}</td>
         <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px">${m.categoria}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px">${medio}</td>
         <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px">${m.descripcion || "-"}</td>
         <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:right;color:${color};font-weight:600">${signo} ${formatCurrency(m.monto, m.moneda)}</td>
       </tr>`;
@@ -124,7 +134,7 @@ function generatePdfHtml(movements: Movement[], periodLabel: string): string {
   <div class="summary-item"><div class="label">Balance</div><div class="value ${balance >= 0 ? "green" : "red"}">${balance >= 0 ? "+" : ""}${formatCurrency(balance)}</div></div>
 </div>
 <table>
-<thead><tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Descripción</th><th>Monto</th></tr></thead>
+<thead><tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Medio</th><th>Descripción</th><th>Monto</th></tr></thead>
 <tbody>${rows}</tbody>
 </table>
 <p style="font-size:11px;color:#999;text-align:center">Total: ${movements.length} movimientos</p>
@@ -172,6 +182,7 @@ export function MovementsList({ movements }: { movements: Movement[] }) {
         formData.set("categoryId", m.categoryId);
         formData.set("fecha", new Date(m.fecha).toISOString());
         formData.set("descripcion", m.descripcion || "");
+        formData.set("medioPago", m.medioPago || "efectivo");
         await updateIncome(m.id, formData);
       }
       setEditingId(null);
@@ -297,6 +308,7 @@ export function MovementsList({ movements }: { movements: Movement[] }) {
                   </p>
                   <p className="text-[11px] text-[rgba(255,255,255,0.35)] truncate">
                     {new Date(m.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
+                    {m.medioPago && ` · ${PAYMENT_METHOD_LABELS[m.medioPago] || m.medioPago}`}
                     {m.descripcion && ` — ${m.descripcion}`}
                   </p>
                 </div>

@@ -19,10 +19,10 @@ import {
 const CURRENCIES = ["ARS", "USD", "EUR", "BRL", "CLP", "UYU", "GBP"];
 const PAYMENT_METHODS = [
   { value: "efectivo", label: "Efectivo" },
-  { value: "tarjeta_debito", label: "Debito" },
-  { value: "tarjeta_credito", label: "Credito" },
-  { value: "transferencia", label: "Transferencia" },
-  { value: "otro", label: "Otro" },
+  { value: "cheque", label: "Cheque" },
+  { value: "transferencia_bancaria", label: "Transferencia" },
+  { value: "cripto", label: "Cripto" },
+  { value: "tarjeta_credito", label: "Tarjeta de Crédito" },
 ];
 
 interface CategoryChild {
