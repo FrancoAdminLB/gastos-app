@@ -36,6 +36,15 @@ yarn-error.log*
 # vercel
 .vercel
 
+# IDE / AI agent files
+.agents/
+.claude/
+.windsurf/
+spec-app-gastos.md
+skills-lock.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma

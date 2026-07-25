@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  owner
+  admin
+}
+
+enum CategoryType {
+  gasto_diario
+  viaje
+  ambos
+  ingreso
+}
+
+enum BudgetPeriod {
+  mensual
+  viaje
+}
+
+enum PaymentMethod {
+  efectivo
+  tarjeta_debito
+  tarjeta_credito
+  transferencia
+  otro
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  nombre    String
+  rol       Role     @default(owner)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  expenses Expense[]
+  trips    Trip[]
+  incomes  Income[]
+
+  @@map("users")
+}
+
+model Trip {
+  id               String   @id @default(uuid())
+  nombre           String
+  fechaInicio      DateTime @map("fecha_inicio")
+  fechaFin         DateTime? @map("fecha_fin")
+  monedaBase       String   @default("USD") @map("moneda_base")
+  presupuestoTotal Float?   @map("presupuesto_total")
+  ownerId          String   @map("owner_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  owner    User      @relation(fields: [ownerId], references: [id])
+  expenses Expense[]
+  budgets  Budget[]
+
+  @@map("trips")
+}
+
+model Category {
+  id        String       @id @default(uuid())
+  nombre    String
+  icono     String       @default("receipt")
+  color     String       @default("#6B7280")
+  tipo      CategoryType @default(ambos)
+  parentId  String?      @map("parent_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[] @relation("CategoryHierarchy")
+  expenses Expense[]
+  budgets  Budget[]
+  incomes  Income[]
+
+  @@map("categories")
+}
+
+model FamilyMember {
+  id        String   @id @default(uuid())
+  nombre    String
+  color     String   @default("#6B7280")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  expenses Expense[]
+
+  @@map("family_members")
+}
+
+model CreditCard {
+  id               String    @id @default(uuid())
+  nombre           String
+  ultimos4         String?   @map("ultimos_4")
+  fechaCierre      DateTime? @map("fecha_cierre")
+  fechaVencimiento DateTime? @map("fecha_vencimiento")
+  color            String    @default("#3B82F6")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  expenses Expense[]
+
+  @@map("credit_cards")
+}
+
+model Expense {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  tripId          String?       @map("trip_id")
+  categoryId      String        @map("category_id")
+  familyMemberId  String?       @map("family_member_id")
+  creditCardId    String?       @map("credit_card_id")
+  monto           Float
+  moneda          String        @default("ARS")
+  montoConvertido Float?        @map("monto_convertido")
+  tasaCambio      Float?        @map("tasa_cambio")
+  fecha           DateTime      @default(now())
+  descripcion     String?
+  medioPago       PaymentMethod @default(efectivo) @map("medio_pago")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id])
+  trip         Trip?         @relation(fields: [tripId], references: [id])
+  category     Category      @relation(fields: [categoryId], references: [id])
+  familyMember FamilyMember? @relation(fields: [familyMemberId], references: [id])
+  creditCard   CreditCard?   @relation(fields: [creditCardId], references: [id])
+
+  @@map("expenses")
+}
+
+model Income {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  categoryId  String   @map("category_id")
+  monto       Float
+  moneda      String   @default("ARS")
+  fecha       DateTime @default(now())
+  descripcion String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@map("incomes")
+}
+
+model InvestmentAccount {
+  id          String   @id @default(uuid())
+  nombre      String
+  tipo        String   @default("otro") // cripto, bolsa, online, banco, otro
+  moneda      String   @default("ARS")
+  saldoActual Float    @default(0) @map("saldo_actual")
+  color       String   @default("#F59E0B")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  movimientos InvestmentMovement[]
+
+  @@map("investment_accounts")
+}
+
+model InvestmentMovement {
+  id          String   @id @default(uuid())
+  accountId   String   @map("account_id")
+  tipo        String   // deposito, retiro, ajuste
+  monto       Float
+  descripcion String?
+  fecha       DateTime @default(now())
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  account InvestmentAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("investment_movements")
+}
+
+model SavingsGoal {
+  id          String    @id @default(uuid())
+  nombre      String
+  montoTarget Float     @map("monto_target")
+  montoActual Float     @default(0) @map("monto_actual")
+  moneda      String    @default("ARS")
+  plazo       String    @default("mediano") // corto, mediano, largo
+  fechaLimite DateTime? @map("fecha_limite")
+  color       String    @default("#7B61FF")
+  icono       String    @default("target") // target, home, car, plane, graduation, piggy
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("savings_goals")
+}
+
+model FinancialEvent {
+  id         String   @id @default(uuid())
+  nombre     String
+  tipo       String   @default("otro") // cobro, vencimiento_tarjeta, vencimiento_servicio, patente, impuesto, otro
+  dia        Int      // day of month (1-31)
+  monto      Float?
+  recurrente Boolean  @default(true)
+  color      String   @default("#3B82F6")
+  notas      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("financial_events")
+}
+
+model Budget {
+  id         String       @id @default(uuid())
+  categoryId String?      @map("category_id")
+  tripId     String?      @map("trip_id")
+  montoLimite Float       @map("monto_limite")
+  periodo    BudgetPeriod @default(mensual)
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  category Category? @relation(fields: [categoryId], references: [id])
+  trip     Trip?     @relation(fields: [tripId], references: [id])
+
+  @@map("budgets")
+}
