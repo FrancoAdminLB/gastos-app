@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/app/actions/auth";
 import { CategoryManager } from "@/components/category-manager";
 import { CreditCardManager } from "@/components/credit-card-manager";
 import { FamilyMemberManager } from "@/components/family-member-manager";
+import { ChangePassword } from "@/components/change-password";
 
 export default async function CategoriasPage() {
   const [categories, budgets, creditCards, familyMembers, user] = await Promise.all([
@@ -28,6 +29,7 @@ export default async function CategoriasPage() {
         budgets={budgets}
         isAdmin={isAdmin}
       />
+      <ChangePassword />
     </div>
   );
 }
