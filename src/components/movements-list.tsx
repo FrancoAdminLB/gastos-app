@@ -257,7 +257,8 @@ export function MovementsList({
         </Select>
         <button
           onClick={exportPdf}
-          className="h-9 px-3 rounded-lg flex items-center gap-1.5 text-xs font-medium border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-white hover:bg-[rgba(255,255,255,0.1)] transition-colors shrink-0"
+          aria-label="Exportar a PDF"
+          className="h-10 px-3 rounded-lg flex items-center gap-1.5 text-xs font-medium border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-white hover:bg-[rgba(255,255,255,0.1)] transition-colors shrink-0"
         >
           <FileText className="h-3.5 w-3.5" />
           PDF
@@ -300,7 +301,7 @@ export function MovementsList({
       </div>
 
       {/* Period label */}
-      <p className="text-[10px] text-[rgba(255,255,255,0.35)] uppercase tracking-widest px-1">
+      <p className="text-[10px] text-[rgba(255,255,255,0.5)] uppercase tracking-widest px-1">
         {getPeriodLabel(period)} &middot; {displayed.length} movimientos
       </p>
 
@@ -334,10 +335,10 @@ export function MovementsList({
                 <p className="text-sm font-medium text-white truncate">
                   {m.categoria}
                   {m.familyMember && (
-                    <span className="text-[rgba(255,255,255,0.35)] font-normal text-xs"> · {m.familyMember}</span>
+                    <span className="text-[rgba(255,255,255,0.5)] font-normal text-xs"> · {m.familyMember}</span>
                   )}
                 </p>
-                <p className="text-[11px] text-[rgba(255,255,255,0.35)] truncate">
+                <p className="text-[11px] text-[rgba(255,255,255,0.5)] truncate">
                   {new Date(m.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                   {m.medioPago && ` · ${PAYMENT_METHOD_LABELS[m.medioPago] || m.medioPago}`}
                   {m.descripcion && ` — ${m.descripcion}`}
@@ -352,9 +353,10 @@ export function MovementsList({
                 {canEdit && (
                   <button
                     onClick={(e) => handleDelete(e, m)}
-                    className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#FF6B6B] transition-colors"
+                    aria-label="Eliminar movimiento"
+                    className="p-2 -mr-1 rounded-lg text-[rgba(255,255,255,0.3)] hover:text-[#FF6B6B] active:bg-[rgba(255,107,107,0.1)] transition-colors"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>

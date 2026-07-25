@@ -60,40 +60,30 @@ async function DashboardContent() {
   );
 }
 
-// Secondary sections — can stream in
+// Secondary sections + FAB — consolidated to avoid duplicate fetching
 async function SecondaryContent() {
-  const [savingsGoals, financialEvents, creditCards] = await Promise.all([
+  const [savingsGoals, financialEvents, creditCards, expenseCategories, incomeCategories, trips, familyMembers] = await Promise.all([
     getSavingsGoals(),
     getFinancialEvents(),
     getCreditCards(),
+    getExpenseCategories(),
+    getIncomeCategories(),
+    getTrips(),
+    getFamilyMembers(),
   ]);
 
   return (
     <>
       <SavingsGoals goals={savingsGoals} />
       <FinancialCalendar events={financialEvents} creditCards={creditCards} />
+      <QuickAddButton
+        categories={expenseCategories}
+        incomeCategories={incomeCategories}
+        trips={trips}
+        creditCards={creditCards}
+        familyMembers={familyMembers}
+      />
     </>
-  );
-}
-
-// FAB data — least critical
-async function QuickAddContent() {
-  const [expenseCategories, incomeCategories, trips, creditCards, familyMembers] = await Promise.all([
-    getExpenseCategories(),
-    getIncomeCategories(),
-    getTrips(),
-    getCreditCards(),
-    getFamilyMembers(),
-  ]);
-
-  return (
-    <QuickAddButton
-      categories={expenseCategories}
-      incomeCategories={incomeCategories}
-      trips={trips}
-      creditCards={creditCards}
-      familyMembers={familyMembers}
-    />
   );
 }
 
@@ -105,9 +95,6 @@ export default function HomePage() {
       </Suspense>
       <Suspense fallback={null}>
         <SecondaryContent />
-      </Suspense>
-      <Suspense fallback={null}>
-        <QuickAddContent />
       </Suspense>
     </div>
   );

@@ -43,6 +43,7 @@ model User {
   expenses           Expense[]
   trips              Trip[]
   incomes            Income[]
+  categories         Category[]
   familyMembers      FamilyMember[]
   creditCards        CreditCard[]
   investmentAccounts InvestmentAccount[]
@@ -73,6 +74,7 @@ model Trip {
 
 model Category {
   id        String       @id @default(uuid())
+  userId    String       @map("user_id")
   nombre    String
   icono     String       @default("receipt")
   color     String       @default("#6B7280")
@@ -81,12 +83,14 @@ model Category {
   createdAt DateTime     @default(now()) @map("created_at")
   updatedAt DateTime     @updatedAt @map("updated_at")
 
+  user     User       @relation(fields: [userId], references: [id])
   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children Category[] @relation("CategoryHierarchy")
   expenses Expense[]
   budgets  Budget[]
   incomes  Income[]
 
+  @@index([userId])
   @@map("categories")
 }
 

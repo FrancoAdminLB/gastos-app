@@ -86,27 +86,15 @@ async function MovimientosContent() {
           familyMembers={familyMembers}
         />
       )}
+
+      <QuickAddButton
+        categories={expenseCategories}
+        incomeCategories={incomeCategories}
+        trips={trips}
+        creditCards={creditCards}
+        familyMembers={familyMembers}
+      />
     </>
-  );
-}
-
-async function QuickAddContent() {
-  const [categories, incomeCategories, trips, creditCards, familyMembers] = await Promise.all([
-    getExpenseCategories(),
-    getIncomeCategories(),
-    getTrips(),
-    getCreditCards(),
-    getFamilyMembers(),
-  ]);
-
-  return (
-    <QuickAddButton
-      categories={categories}
-      incomeCategories={incomeCategories}
-      trips={trips}
-      creditCards={creditCards}
-      familyMembers={familyMembers}
-    />
   );
 }
 
@@ -115,9 +103,6 @@ export default function MovimientosPage() {
     <div className="space-y-5">
       <Suspense fallback={<div className="space-y-3 animate-pulse"><div className="h-8 w-40 rounded bg-[rgba(255,255,255,0.06)]" /><div className="h-9 rounded-lg bg-[rgba(255,255,255,0.06)]" /><div className="grid grid-cols-3 gap-2"><div className="h-16 rounded-xl bg-[rgba(255,255,255,0.06)]" /><div className="h-16 rounded-xl bg-[rgba(255,255,255,0.06)]" /><div className="h-16 rounded-xl bg-[rgba(255,255,255,0.06)]" /></div></div>}>
         <MovimientosContent />
-      </Suspense>
-      <Suspense fallback={null}>
-        <QuickAddContent />
       </Suspense>
     </div>
   );

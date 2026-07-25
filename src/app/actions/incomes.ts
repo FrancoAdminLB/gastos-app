@@ -14,11 +14,7 @@ export async function getIncomes(filters?: { month?: number; year?: number }) {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  const where: Record<string, unknown> = {};
-
-  if (user.rol === "owner") {
-    where.userId = user.id;
-  }
+  const where: Record<string, unknown> = { userId: user.id };
 
   if (filters?.month !== undefined && filters?.year !== undefined) {
     const startDate = new Date(filters.year, filters.month, 1);
@@ -67,9 +63,7 @@ export async function deleteIncome(id: string) {
 
   const income = await prisma.income.findUnique({ where: { id } });
   if (!income) throw new Error("Ingreso no encontrado");
-  if (user.rol === "owner" && income.userId !== user.id) {
-    throw new Error("No autorizado");
-  }
+  if (income.userId !== user.id) throw new Error("No autorizado");
 
   await prisma.income.delete({ where: { id } });
   revalidateAll();
@@ -81,9 +75,7 @@ export async function updateIncome(id: string, formData: FormData) {
 
   const income = await prisma.income.findUnique({ where: { id } });
   if (!income) throw new Error("Ingreso no encontrado");
-  if (user.rol === "owner" && income.userId !== user.id) {
-    throw new Error("No autorizado");
-  }
+  if (income.userId !== user.id) throw new Error("No autorizado");
 
   const monto = parseFloat(formData.get("monto") as string);
   if (isNaN(monto) || monto <= 0) throw new Error("Monto inválido");

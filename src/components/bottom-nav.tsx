@@ -29,9 +29,10 @@ export function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-label={item.label}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all",
-                  isActive ? "text-white" : "text-[rgba(255,255,255,0.35)]"
+                  "flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] px-3 py-2 rounded-xl transition-all",
+                  isActive ? "text-white" : "text-[rgba(255,255,255,0.5)]"
                 )}
               >
                 <div className="relative">

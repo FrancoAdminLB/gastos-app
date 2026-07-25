@@ -8,6 +8,7 @@ export async function getCategories() {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
   return prisma.category.findMany({
+    where: { userId: user.id },
     include: {
       children: {
         include: {
@@ -24,6 +25,7 @@ export async function getCategoriesFlat() {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
   return prisma.category.findMany({
+    where: { userId: user.id },
     orderBy: { nombre: "asc" },
   });
 }
@@ -32,7 +34,7 @@ export async function getExpenseCategories() {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
   return prisma.category.findMany({
-    where: { tipo: { not: "ingreso" } },
+    where: { userId: user.id, tipo: { not: "ingreso" } },
     include: {
       children: {
         include: {
@@ -49,14 +51,14 @@ export async function getIncomeCategories() {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
   return prisma.category.findMany({
-    where: { tipo: "ingreso" },
+    where: { userId: user.id, tipo: "ingreso" },
     orderBy: { nombre: "asc" },
   });
 }
 
 export async function createCategory(formData: FormData) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
 
   const nombre = formData.get("nombre") as string;
   const icono = (formData.get("icono") as string) || "receipt";
@@ -64,12 +66,15 @@ export async function createCategory(formData: FormData) {
   const tipo = (formData.get("tipo") as string) || "ambos";
   const parentId = (formData.get("parentId") as string) || null;
 
-  // Validate max 3 levels
+  // Validate max 3 levels and ownership of parent
   if (parentId) {
     const parent = await prisma.category.findUnique({
       where: { id: parentId },
       include: { parent: true },
     });
+    if (!parent || parent.userId !== user.id) {
+      throw new Error("Categoría padre no encontrada");
+    }
     if (parent?.parent?.parentId) {
       throw new Error("Maximo 3 niveles de categorias");
     }
@@ -77,6 +82,7 @@ export async function createCategory(formData: FormData) {
 
   await prisma.category.create({
     data: {
+      userId: user.id,
       nombre,
       icono,
       color,
@@ -90,7 +96,10 @@ export async function createCategory(formData: FormData) {
 
 export async function updateCategory(id: string, formData: FormData) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
+
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category || category.userId !== user.id) throw new Error("No autorizado");
 
   const nombre = formData.get("nombre") as string;
   const color = (formData.get("color") as string) || undefined;
@@ -110,7 +119,10 @@ export async function updateCategory(id: string, formData: FormData) {
 
 export async function deleteCategory(id: string) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
+
+  const category = await prisma.category.findUnique({ where: { id } });
+  if (!category || category.userId !== user.id) throw new Error("No autorizado");
 
   await prisma.category.delete({ where: { id } });
   revalidatePath("/categorias");

@@ -9,7 +9,7 @@ export async function getTrips() {
   if (!user) return [];
 
   return prisma.trip.findMany({
-    where: user.rol === "owner" ? { ownerId: user.id } : {},
+    where: { ownerId: user.id },
     include: {
       _count: { select: { expenses: true } },
     },
@@ -49,9 +49,7 @@ export async function deleteTrip(id: string) {
 
   const trip = await prisma.trip.findUnique({ where: { id } });
   if (!trip) throw new Error("Viaje no encontrado");
-  if (user.rol === "owner" && trip.ownerId !== user.id) {
-    throw new Error("No autorizado");
-  }
+  if (trip.ownerId !== user.id) throw new Error("No autorizado");
 
   // Delete associated expenses first
   await prisma.expense.deleteMany({ where: { tripId: id } });
@@ -78,7 +76,7 @@ export async function getTripWithExpenses(id: string) {
   });
 
   if (!trip) return null;
-  if (user.rol === "owner" && trip.ownerId !== user.id) return null;
+  if (trip.ownerId !== user.id) return null;
 
   return trip;
 }

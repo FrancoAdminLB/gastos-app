@@ -202,7 +202,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "rgba(255,255,255,0.35)" }} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }} />
                 <YAxis hide />
                 <Tooltip formatter={formatTooltipValue} contentStyle={tooltipStyle} labelStyle={{ color: "rgba(255,255,255,0.5)" }} />
                 <Area type="monotone" dataKey="ingresos" stroke="#4ADE80" strokeWidth={2} fill="url(#incomeGrad)" name="Ingresos" />
@@ -243,7 +243,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <p className="text-[9px] text-[rgba(255,255,255,0.35)]">Total</p>
+                  <p className="text-[9px] text-[rgba(255,255,255,0.5)]">Total</p>
                   <p className="text-xs font-bold text-white">{formatCurrency(totalCatExpenses)}</p>
                 </div>
               </div>
@@ -259,7 +259,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                   );
                 })}
                 {byCategory.length > 5 && (
-                  <p className="text-[10px] text-[rgba(255,255,255,0.25)] pl-4">+{byCategory.length - 5} más</p>
+                  <p className="text-[10px] text-[rgba(255,255,255,0.45)] pl-4">+{byCategory.length - 5} más</p>
                 )}
               </div>
             </div>
@@ -282,7 +282,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                     <stop offset="100%" stopColor="#7B61FF" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "rgba(255,255,255,0.25)" }} interval="preserveStartEnd" />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "rgba(255,255,255,0.45)" }} interval="preserveStartEnd" />
                 <YAxis hide />
                 <Tooltip formatter={formatTooltipValue} contentStyle={tooltipStyle} />
                 <Area type="monotone" dataKey="total" stroke="#7B61FF" strokeWidth={2} fill="url(#dailyGrad)" name="Gasto" dot={false} />
@@ -302,7 +302,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={monthlyData} barCategoryGap="20%">
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "rgba(255,255,255,0.35)" }} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }} />
                 <YAxis hide />
                 <Tooltip formatter={formatTooltipValue} contentStyle={tooltipStyle} />
                 <Bar dataKey="ahorro" radius={[6, 6, 0, 0]} name="Ahorro">
@@ -418,10 +418,10 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                   <p className="text-sm font-medium text-white truncate">
                     {tx.categoria}
                     {tx.familyMember && (
-                      <span className="text-[rgba(255,255,255,0.35)] font-normal text-xs"> · {tx.familyMember}</span>
+                      <span className="text-[rgba(255,255,255,0.5)] font-normal text-xs"> · {tx.familyMember}</span>
                     )}
                   </p>
-                  <p className="text-[11px] text-[rgba(255,255,255,0.35)] truncate">
+                  <p className="text-[11px] text-[rgba(255,255,255,0.5)] truncate">
                     {tx.descripcion || new Date(tx.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                   </p>
                 </div>

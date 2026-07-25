@@ -73,16 +73,18 @@ export function QuickAddButton({
         {hasIncomeCategories && (
           <button
             onClick={() => openSheet("income")}
-            className="h-10 w-10 rounded-full bg-gradient-to-r from-[#4ADE80] to-[#22C55E] text-white shadow-[0_4px_16px_rgba(74,222,128,0.3)] flex items-center justify-center active:scale-95 transition-transform"
+            aria-label="Nuevo ingreso"
+            className="h-12 w-12 rounded-full bg-gradient-to-r from-[#4ADE80] to-[#22C55E] text-white shadow-[0_4px_16px_rgba(74,222,128,0.3)] flex items-center justify-center active:scale-95 transition-transform"
           >
-            <ArrowUpRight className="h-4 w-4" />
+            <ArrowUpRight className="h-5 w-5" />
           </button>
         )}
         <button
           onClick={() => openSheet("expense")}
-          className="h-12 w-12 rounded-full gradient-card glow-primary text-white flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Nuevo gasto"
+          className="h-14 w-14 rounded-full gradient-card glow-primary text-white flex items-center justify-center active:scale-95 transition-transform"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-6 w-6" />
         </button>
       </div>
 

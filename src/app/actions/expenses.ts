@@ -108,11 +108,7 @@ export async function getExpenses(filters?: {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  const where: Record<string, unknown> = {};
-
-  if (user.rol === "owner") {
-    where.userId = user.id;
-  }
+  const where: Record<string, unknown> = { userId: user.id };
 
   if (filters?.tripId !== undefined) {
     where.tripId = filters.tripId;
@@ -146,9 +142,7 @@ export async function deleteExpense(id: string) {
 
   const expense = await prisma.expense.findUnique({ where: { id } });
   if (!expense) throw new Error("Gasto no encontrado");
-  if (user.rol === "owner" && expense.userId !== user.id) {
-    throw new Error("No autorizado");
-  }
+  if (expense.userId !== user.id) throw new Error("No autorizado");
 
   await prisma.expense.delete({ where: { id } });
   revalidateAll();
@@ -160,9 +154,7 @@ export async function updateExpense(id: string, formData: FormData) {
 
   const expense = await prisma.expense.findUnique({ where: { id } });
   if (!expense) throw new Error("Gasto no encontrado");
-  if (user.rol === "owner" && expense.userId !== user.id) {
-    throw new Error("No autorizado");
-  }
+  if (expense.userId !== user.id) throw new Error("No autorizado");
 
   const monto = parseFloat(formData.get("monto") as string);
   if (isNaN(monto) || monto <= 0) throw new Error("Monto inválido");

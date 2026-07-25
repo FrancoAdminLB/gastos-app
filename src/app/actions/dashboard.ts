@@ -10,7 +10,7 @@ export async function getDashboardData() {
   const now = new Date();
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
-  const userFilter = user.rol === "owner" ? { userId: user.id } : {};
+  const userFilter = { userId: user.id };
 
   const [expenses, incomes, investmentAccounts] = await Promise.all([
     prisma.expense.findMany({

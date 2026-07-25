@@ -29,7 +29,8 @@ export function Header({ userName }: { userName?: string }) {
           )}
           <button
             onClick={handleLogout}
-            className="w-8 h-8 rounded-xl glass flex items-center justify-center text-[rgba(255,255,255,0.5)] hover:text-white transition-colors"
+            aria-label="Cerrar sesión"
+            className="w-10 h-10 rounded-xl glass flex items-center justify-center text-[rgba(255,255,255,0.5)] hover:text-white transition-colors"
           >
             <LogOut className="h-4 w-4" />
           </button>
