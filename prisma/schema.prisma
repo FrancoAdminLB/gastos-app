@@ -40,9 +40,15 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  expenses Expense[]
-  trips    Trip[]
-  incomes  Income[]
+  expenses           Expense[]
+  trips              Trip[]
+  incomes            Income[]
+  familyMembers      FamilyMember[]
+  creditCards        CreditCard[]
+  investmentAccounts InvestmentAccount[]
+  savingsGoals       SavingsGoal[]
+  financialEvents    FinancialEvent[]
+  budgets            Budget[]
 
   @@map("users")
 }
@@ -86,11 +92,13 @@ model Category {
 
 model FamilyMember {
   id        String   @id @default(uuid())
+  userId    String   @map("user_id")
   nombre    String
   color     String   @default("#6B7280")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  user     User      @relation(fields: [userId], references: [id])
   expenses Expense[]
 
   @@map("family_members")
@@ -98,6 +106,7 @@ model FamilyMember {
 
 model CreditCard {
   id               String    @id @default(uuid())
+  userId           String    @map("user_id")
   nombre           String
   ultimos4         String?   @map("ultimos_4")
   fechaCierre      DateTime? @map("fecha_cierre")
@@ -106,6 +115,7 @@ model CreditCard {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
+  user     User      @relation(fields: [userId], references: [id])
   expenses Expense[]
 
   @@map("credit_cards")
@@ -134,6 +144,7 @@ model Expense {
   familyMember FamilyMember? @relation(fields: [familyMemberId], references: [id])
   creditCard   CreditCard?   @relation(fields: [creditCardId], references: [id])
 
+  @@index([userId, fecha])
   @@map("expenses")
 }
 
@@ -152,19 +163,22 @@ model Income {
   user     User     @relation(fields: [userId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
 
+  @@index([userId, fecha])
   @@map("incomes")
 }
 
 model InvestmentAccount {
   id          String   @id @default(uuid())
+  userId      String   @map("user_id")
   nombre      String
-  tipo        String   @default("otro") // cripto, bolsa, online, banco, otro
+  tipo        String   @default("otro")
   moneda      String   @default("ARS")
   saldoActual Float    @default(0) @map("saldo_actual")
   color       String   @default("#F59E0B")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  user        User                 @relation(fields: [userId], references: [id])
   movimientos InvestmentMovement[]
 
   @@map("investment_accounts")
@@ -173,7 +187,7 @@ model InvestmentAccount {
 model InvestmentMovement {
   id          String   @id @default(uuid())
   accountId   String   @map("account_id")
-  tipo        String   // deposito, retiro, ajuste
+  tipo        String
   monto       Float
   descripcion String?
   fecha       DateTime @default(now())
@@ -186,25 +200,29 @@ model InvestmentMovement {
 
 model SavingsGoal {
   id          String    @id @default(uuid())
+  userId      String    @map("user_id")
   nombre      String
   montoTarget Float     @map("monto_target")
   montoActual Float     @default(0) @map("monto_actual")
   moneda      String    @default("ARS")
-  plazo       String    @default("mediano") // corto, mediano, largo
+  plazo       String    @default("mediano")
   fechaLimite DateTime? @map("fecha_limite")
   color       String    @default("#7B61FF")
-  icono       String    @default("target") // target, home, car, plane, graduation, piggy
+  icono       String    @default("target")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
 
   @@map("savings_goals")
 }
 
 model FinancialEvent {
   id         String   @id @default(uuid())
+  userId     String   @map("user_id")
   nombre     String
-  tipo       String   @default("otro") // cobro, vencimiento_tarjeta, vencimiento_servicio, patente, impuesto, otro
-  dia        Int      // day of month (1-31)
+  tipo       String   @default("otro")
+  dia        Int
   monto      Float?
   recurrente Boolean  @default(true)
   color      String   @default("#3B82F6")
@@ -212,11 +230,14 @@ model FinancialEvent {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
+  user User @relation(fields: [userId], references: [id])
+
   @@map("financial_events")
 }
 
 model Budget {
   id         String       @id @default(uuid())
+  userId     String       @map("user_id")
   categoryId String?      @map("category_id")
   tripId     String?      @map("trip_id")
   montoLimite Float       @map("monto_limite")
@@ -224,6 +245,7 @@ model Budget {
   createdAt  DateTime     @default(now()) @map("created_at")
   updatedAt  DateTime     @updatedAt @map("updated_at")
 
+  user     User      @relation(fields: [userId], references: [id])
   category Category? @relation(fields: [categoryId], references: [id])
   trip     Trip?     @relation(fields: [tripId], references: [id])
 

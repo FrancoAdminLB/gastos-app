@@ -36,8 +36,10 @@ export async function createExpense(formData: FormData) {
   if (!user) throw new Error("No autenticado");
 
   const monto = parseFloat(formData.get("monto") as string);
+  if (isNaN(monto) || monto <= 0) throw new Error("Monto inválido");
   const moneda = (formData.get("moneda") as string) || "ARS";
   const categoryId = formData.get("categoryId") as string;
+  if (!categoryId) throw new Error("Categoría requerida");
   const tripId = (formData.get("tripId") as string) || null;
   const fecha = new Date(formData.get("fecha") as string);
   const descripcion = (formData.get("descripcion") as string) || null;
@@ -163,8 +165,10 @@ export async function updateExpense(id: string, formData: FormData) {
   }
 
   const monto = parseFloat(formData.get("monto") as string);
+  if (isNaN(monto) || monto <= 0) throw new Error("Monto inválido");
   const moneda = (formData.get("moneda") as string) || "ARS";
   const categoryId = formData.get("categoryId") as string;
+  if (!categoryId) throw new Error("Categoría requerida");
   const tripId = (formData.get("tripId") as string) || null;
   const fecha = new Date(formData.get("fecha") as string);
   const descripcion = (formData.get("descripcion") as string) || null;

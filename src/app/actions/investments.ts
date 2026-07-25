@@ -8,6 +8,7 @@ export async function getInvestmentAccounts() {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
   return prisma.investmentAccount.findMany({
+    where: { userId: user.id },
     include: {
       movimientos: {
         orderBy: { fecha: "desc" },
@@ -21,23 +22,26 @@ export async function getInvestmentAccounts() {
 export async function getInvestmentSummary() {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
-  const accounts = await prisma.investmentAccount.findMany();
+  const accounts = await prisma.investmentAccount.findMany({
+    where: { userId: user.id },
+  });
   const totalInvertido = accounts.reduce((sum, a) => sum + a.saldoActual, 0);
   return { totalInvertido, cuentas: accounts.length };
 }
 
 export async function createInvestmentAccount(formData: FormData) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
 
   const nombre = formData.get("nombre") as string;
+  if (!nombre?.trim()) throw new Error("Nombre requerido");
   const tipo = (formData.get("tipo") as string) || "otro";
   const moneda = (formData.get("moneda") as string) || "ARS";
   const color = (formData.get("color") as string) || "#F59E0B";
   const saldoInicial = parseFloat((formData.get("saldoInicial") as string) || "0");
 
   const account = await prisma.investmentAccount.create({
-    data: { nombre, tipo, moneda, color, saldoActual: saldoInicial },
+    data: { userId: user.id, nombre, tipo, moneda, color, saldoActual: isNaN(saldoInicial) ? 0 : saldoInicial },
   });
 
   if (saldoInicial > 0) {
@@ -57,7 +61,10 @@ export async function createInvestmentAccount(formData: FormData) {
 
 export async function updateInvestmentAccount(id: string, formData: FormData) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
+
+  const account = await prisma.investmentAccount.findUnique({ where: { id } });
+  if (!account || account.userId !== user.id) throw new Error("No autorizado");
 
   const data: Record<string, unknown> = {};
   const nombre = formData.get("nombre") as string | null;
@@ -73,7 +80,10 @@ export async function updateInvestmentAccount(id: string, formData: FormData) {
 
 export async function deleteInvestmentAccount(id: string) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
+
+  const account = await prisma.investmentAccount.findUnique({ where: { id } });
+  if (!account || account.userId !== user.id) throw new Error("No autorizado");
 
   await prisma.investmentAccount.delete({ where: { id } });
   revalidatePath("/inversiones");
@@ -82,17 +92,18 @@ export async function deleteInvestmentAccount(id: string) {
 
 export async function addInvestmentMovement(formData: FormData) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
 
   const accountId = formData.get("accountId") as string;
-  const tipo = formData.get("tipo") as string; // deposito, retiro, ajuste
+  const account = await prisma.investmentAccount.findUnique({ where: { id: accountId } });
+  if (!account || account.userId !== user.id) throw new Error("No autorizado");
+
+  const tipo = formData.get("tipo") as string;
   const monto = parseFloat(formData.get("monto") as string);
+  if (isNaN(monto) || monto <= 0) throw new Error("Monto inválido");
   const descripcion = (formData.get("descripcion") as string) || null;
   const fechaStr = formData.get("fecha") as string;
   const fecha = fechaStr ? new Date(fechaStr) : new Date();
-
-  const account = await prisma.investmentAccount.findUnique({ where: { id: accountId } });
-  if (!account) throw new Error("Cuenta no encontrada");
 
   let nuevoSaldo = account.saldoActual;
   if (tipo === "deposito") {
@@ -100,7 +111,6 @@ export async function addInvestmentMovement(formData: FormData) {
   } else if (tipo === "retiro") {
     nuevoSaldo -= monto;
   } else if (tipo === "ajuste") {
-    // monto is the NEW balance, calculate difference
     nuevoSaldo = monto;
   }
 
@@ -126,22 +136,22 @@ export async function addInvestmentMovement(formData: FormData) {
 
 export async function deleteInvestmentMovement(id: string) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
 
-  const mov = await prisma.investmentMovement.findUnique({ where: { id } });
+  const mov = await prisma.investmentMovement.findUnique({
+    where: { id },
+    include: { account: true },
+  });
   if (!mov) throw new Error("Movimiento no encontrado");
+  if (mov.account.userId !== user.id) throw new Error("No autorizado");
 
-  const account = await prisma.investmentAccount.findUnique({ where: { id: mov.accountId } });
-  if (!account) throw new Error("Cuenta no encontrada");
-
-  // Reverse the movement
-  let nuevoSaldo = account.saldoActual;
+  let nuevoSaldo = mov.account.saldoActual;
   if (mov.tipo === "deposito") {
     nuevoSaldo -= mov.monto;
   } else if (mov.tipo === "retiro") {
     nuevoSaldo += mov.monto;
   } else if (mov.tipo === "ajuste") {
-    nuevoSaldo -= mov.monto; // reverse the adjustment delta
+    nuevoSaldo -= mov.monto;
   }
 
   await prisma.$transaction([

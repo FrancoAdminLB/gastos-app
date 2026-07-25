@@ -42,6 +42,7 @@ export async function getDashboardData() {
       orderBy: { fecha: "desc" },
     }),
     prisma.investmentAccount.findMany({
+      where: { userId: user.id },
       select: {
         nombre: true,
         tipo: true,

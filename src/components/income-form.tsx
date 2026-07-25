@@ -48,12 +48,14 @@ export function IncomeForm({
   onSuccess?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isEditing = !!income;
   const today = new Date().toISOString().split("T")[0];
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     const formData = new FormData(e.currentTarget);
     try {
       if (isEditing) {
@@ -64,7 +66,7 @@ export function IncomeForm({
       }
       onSuccess?.();
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Error al guardar");
     } finally {
       setLoading(false);
     }
@@ -152,6 +154,10 @@ export function IncomeForm({
           className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.2)] focus:border-[#4ADE80] focus:ring-[#4ADE80]/20"
         />
       </div>
+
+      {error && (
+        <p className="text-sm text-[#FF6B6B] bg-[rgba(255,107,107,0.1)] rounded-lg px-3 py-2">{error}</p>
+      )}
 
       <Button
         type="submit"

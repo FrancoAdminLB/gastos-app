@@ -7,6 +7,7 @@ import { getCurrentUser } from "./auth";
 function revalidateAll() {
   revalidatePath("/");
   revalidatePath("/movimientos");
+  revalidatePath("/reportes");
 }
 
 export async function getIncomes(filters?: { month?: number; year?: number }) {
@@ -37,8 +38,10 @@ export async function createIncome(formData: FormData) {
   if (!user) throw new Error("No autenticado");
 
   const monto = parseFloat(formData.get("monto") as string);
+  if (isNaN(monto) || monto <= 0) throw new Error("Monto inválido");
   const moneda = (formData.get("moneda") as string) || "ARS";
   const categoryId = formData.get("categoryId") as string;
+  if (!categoryId) throw new Error("Categoría requerida");
   const fecha = new Date(formData.get("fecha") as string);
   const descripcion = (formData.get("descripcion") as string) || null;
   const medioPago = (formData.get("medioPago") as string) || "efectivo";
@@ -83,8 +86,10 @@ export async function updateIncome(id: string, formData: FormData) {
   }
 
   const monto = parseFloat(formData.get("monto") as string);
+  if (isNaN(monto) || monto <= 0) throw new Error("Monto inválido");
   const moneda = (formData.get("moneda") as string) || "ARS";
   const categoryId = formData.get("categoryId") as string;
+  if (!categoryId) throw new Error("Categoría requerida");
   const fecha = new Date(formData.get("fecha") as string);
   const descripcion = (formData.get("descripcion") as string) || null;
   const medioPago = (formData.get("medioPago") as string) || "efectivo";
@@ -92,7 +97,7 @@ export async function updateIncome(id: string, formData: FormData) {
   await prisma.income.update({
     where: { id },
     data: {
-      category: { connect: { id: categoryId } },
+      categoryId,
       monto,
       moneda,
       fecha,

@@ -8,19 +8,21 @@ export async function getFamilyMembers() {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
   return prisma.familyMember.findMany({
+    where: { userId: user.id },
     orderBy: { nombre: "asc" },
   });
 }
 
 export async function createFamilyMember(formData: FormData) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
 
   const nombre = formData.get("nombre") as string;
+  if (!nombre?.trim()) throw new Error("Nombre requerido");
   const color = (formData.get("color") as string) || "#6B7280";
 
   await prisma.familyMember.create({
-    data: { nombre, color },
+    data: { userId: user.id, nombre, color },
   });
 
   revalidatePath("/categorias");
@@ -31,12 +33,14 @@ export async function createFamilyMember(formData: FormData) {
 
 export async function updateFamilyMember(id: string, formData: FormData) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
+
+  const member = await prisma.familyMember.findUnique({ where: { id } });
+  if (!member || member.userId !== user.id) throw new Error("No autorizado");
 
   const nombre = formData.get("nombre") as string;
   const data: Record<string, unknown> = {};
   if (nombre) data.nombre = nombre;
-
   const color = formData.get("color") as string | null;
   if (color) data.color = color;
 
@@ -49,7 +53,10 @@ export async function updateFamilyMember(id: string, formData: FormData) {
 
 export async function deleteFamilyMember(id: string) {
   const user = await getCurrentUser();
-  if (!user || !["admin", "owner"].includes(user.rol)) throw new Error("No autorizado");
+  if (!user) throw new Error("No autorizado");
+
+  const member = await prisma.familyMember.findUnique({ where: { id } });
+  if (!member || member.userId !== user.id) throw new Error("No autorizado");
 
   await prisma.familyMember.delete({ where: { id } });
   revalidatePath("/categorias");
