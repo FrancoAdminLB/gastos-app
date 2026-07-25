@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createIncome } from "@/app/actions/incomes";
+import { createIncome, updateIncome } from "@/app/actions/incomes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,14 +28,27 @@ interface IncomeCategory {
   color: string;
 }
 
+interface IncomeData {
+  id: string;
+  monto: number;
+  moneda: string;
+  categoryId: string;
+  fecha: Date;
+  descripcion: string | null;
+  medioPago: string;
+}
+
 export function IncomeForm({
   categories,
+  income,
   onSuccess,
 }: {
   categories: IncomeCategory[];
+  income?: IncomeData;
   onSuccess?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const isEditing = !!income;
   const today = new Date().toISOString().split("T")[0];
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -43,8 +56,12 @@ export function IncomeForm({
     setLoading(true);
     const formData = new FormData(e.currentTarget);
     try {
-      await createIncome(formData);
-      (e.target as HTMLFormElement).reset();
+      if (isEditing) {
+        await updateIncome(income.id, formData);
+      } else {
+        await createIncome(formData);
+        (e.target as HTMLFormElement).reset();
+      }
       onSuccess?.();
     } catch (err) {
       console.error(err);
@@ -63,11 +80,12 @@ export function IncomeForm({
             type="number"
             step="0.01"
             placeholder="0.00"
+            defaultValue={income?.monto}
             required
             autoFocus
             className="h-14 text-2xl font-bold rounded-xl flex-1 tabular-nums bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.2)] focus:border-[#4ADE80] focus:ring-[#4ADE80]/20"
           />
-          <Select name="moneda" defaultValue="ARS">
+          <Select name="moneda" defaultValue={income?.moneda || "ARS"}>
             <SelectTrigger className="h-14 w-24 rounded-xl text-base font-medium bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white">
               <SelectValue />
             </SelectTrigger>
@@ -82,7 +100,7 @@ export function IncomeForm({
 
       <div className="space-y-1.5">
         <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Fuente</Label>
-        <Select name="categoryId" required>
+        <Select name="categoryId" defaultValue={income?.categoryId} required>
           <SelectTrigger className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white">
             <SelectValue placeholder="Elegir fuente" />
           </SelectTrigger>
@@ -105,14 +123,14 @@ export function IncomeForm({
           <Input
             name="fecha"
             type="date"
-            defaultValue={today}
+            defaultValue={income ? new Date(income.fecha).toISOString().split("T")[0] : today}
             required
             className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white focus:border-[#4ADE80] focus:ring-[#4ADE80]/20"
           />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Medio</Label>
-          <Select name="medioPago" defaultValue="efectivo">
+          <Select name="medioPago" defaultValue={income?.medioPago || "efectivo"}>
             <SelectTrigger className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white">
               <SelectValue />
             </SelectTrigger>
@@ -130,6 +148,7 @@ export function IncomeForm({
         <Input
           name="descripcion"
           placeholder="Opcional"
+          defaultValue={income?.descripcion || ""}
           className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.2)] focus:border-[#4ADE80] focus:ring-[#4ADE80]/20"
         />
       </div>
@@ -139,7 +158,7 @@ export function IncomeForm({
         className="w-full h-12 rounded-xl text-base font-medium border-0 hover:opacity-90 transition-opacity bg-gradient-to-r from-[#4ADE80] to-[#22C55E] text-white shadow-[0_8px_32px_rgba(74,222,128,0.25)]"
         disabled={loading}
       >
-        {loading ? "Guardando..." : "Agregar ingreso"}
+        {loading ? "Guardando..." : isEditing ? "Guardar cambios" : "Agregar ingreso"}
       </Button>
     </form>
   );

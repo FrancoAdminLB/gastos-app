@@ -34,7 +34,7 @@ export async function createCreditCard(formData: FormData) {
 
   revalidatePath("/categorias");
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
 }
 
 export async function updateCreditCard(id: string, formData: FormData) {
@@ -62,7 +62,7 @@ export async function updateCreditCard(id: string, formData: FormData) {
 
   revalidatePath("/categorias");
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
 }
 
 export async function deleteCreditCard(id: string) {
@@ -72,5 +72,5 @@ export async function deleteCreditCard(id: string) {
   await prisma.creditCard.delete({ where: { id } });
   revalidatePath("/categorias");
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
 }

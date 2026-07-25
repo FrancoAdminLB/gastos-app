@@ -59,7 +59,7 @@ export async function deleteTrip(id: string) {
   await prisma.trip.delete({ where: { id } });
 
   revalidatePath("/viajes");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
 }
 
 export async function getTripWithExpenses(id: string) {

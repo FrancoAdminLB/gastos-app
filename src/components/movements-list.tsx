@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { updateExpense, deleteExpense } from "@/app/actions/expenses";
-import { updateIncome, deleteIncome } from "@/app/actions/incomes";
+import { deleteExpense } from "@/app/actions/expenses";
+import { deleteIncome } from "@/app/actions/incomes";
 import { formatCurrency } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,13 +13,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ExpenseForm } from "./expense-form";
+import { IncomeForm } from "./income-form";
+import {
   ArrowUpRight,
   ArrowDownRight,
   Pencil,
-  Check,
-  X,
   Trash2,
-  Download,
   FileText,
 } from "lucide-react";
 
@@ -34,7 +39,49 @@ interface Movement {
   color: string;
   categoryId: string;
   familyMember?: string | null;
+  familyMemberId?: string | null;
   medioPago?: string | null;
+  tripId?: string | null;
+  creditCardId?: string | null;
+}
+
+interface CategoryChild {
+  id: string;
+  nombre: string;
+  color: string;
+}
+
+interface Category {
+  id: string;
+  nombre: string;
+  color: string;
+  tipo: string;
+  parentId: string | null;
+  children?: CategoryChild[];
+}
+
+interface IncomeCategory {
+  id: string;
+  nombre: string;
+  color: string;
+}
+
+interface Trip {
+  id: string;
+  nombre: string;
+}
+
+interface CreditCard {
+  id: string;
+  nombre: string;
+  ultimos4: string | null;
+  color: string;
+}
+
+interface FamilyMember {
+  id: string;
+  nombre: string;
+  color: string;
 }
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -141,12 +188,24 @@ function generatePdfHtml(movements: Movement[], periodLabel: string): string {
 </body></html>`;
 }
 
-export function MovementsList({ movements }: { movements: Movement[] }) {
+export function MovementsList({
+  movements,
+  expenseCategories,
+  incomeCategories,
+  trips,
+  creditCards,
+  familyMembers,
+}: {
+  movements: Movement[];
+  expenseCategories?: Category[];
+  incomeCategories?: IncomeCategory[];
+  trips?: Trip[];
+  creditCards?: CreditCard[];
+  familyMembers?: FamilyMember[];
+}) {
   const [period, setPeriod] = useState<Period>("mes");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editMonto, setEditMonto] = useState("");
-  const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<"todos" | "ingresos" | "egresos">("todos");
+  const [editingMovement, setEditingMovement] = useState<Movement | null>(null);
 
   const filtered = filterByPeriod(movements, period);
   const displayed = filter === "todos"
@@ -158,40 +217,10 @@ export function MovementsList({ movements }: { movements: Movement[] }) {
   const totalIngresos = filtered.filter((m) => m.tipo === "ingreso").reduce((s, m) => s + m.monto, 0);
   const totalEgresos = filtered.filter((m) => m.tipo === "gasto").reduce((s, m) => s + m.monto, 0);
 
-  function startEdit(m: Movement) {
-    setEditingId(m.id);
-    setEditMonto(String(m.monto));
-  }
+  const canEdit = !!expenseCategories && !!incomeCategories;
 
-  async function saveEdit(m: Movement) {
-    const newMonto = parseFloat(editMonto);
-    if (isNaN(newMonto) || newMonto <= 0) return;
-    setSaving(true);
-    try {
-      const formData = new FormData();
-      formData.set("monto", String(newMonto));
-      if (m.tipo === "gasto") {
-        formData.set("moneda", m.moneda);
-        formData.set("categoryId", m.categoryId);
-        formData.set("fecha", new Date(m.fecha).toISOString());
-        formData.set("descripcion", m.descripcion || "");
-        formData.set("medioPago", m.medioPago || "efectivo");
-        await updateExpense(m.id, formData);
-      } else {
-        formData.set("moneda", m.moneda);
-        formData.set("categoryId", m.categoryId);
-        formData.set("fecha", new Date(m.fecha).toISOString());
-        formData.set("descripcion", m.descripcion || "");
-        formData.set("medioPago", m.medioPago || "efectivo");
-        await updateIncome(m.id, formData);
-      }
-      setEditingId(null);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleDelete(m: Movement) {
+  async function handleDelete(e: React.MouseEvent, m: Movement) {
+    e.stopPropagation();
     const label = m.tipo === "ingreso" ? "ingreso" : "gasto";
     if (!confirm(`Eliminar este ${label}?`)) return;
     if (m.tipo === "gasto") {
@@ -231,7 +260,7 @@ export function MovementsList({ movements }: { movements: Movement[] }) {
           className="h-9 px-3 rounded-lg flex items-center gap-1.5 text-xs font-medium border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-white hover:bg-[rgba(255,255,255,0.1)] transition-colors shrink-0"
         >
           <FileText className="h-3.5 w-3.5" />
-          Exportar PDF
+          PDF
         </button>
       </div>
 
@@ -282,89 +311,110 @@ export function MovementsList({ movements }: { movements: Movement[] }) {
         </div>
       ) : (
         <div className="rounded-xl glass divide-y divide-[rgba(255,255,255,0.06)]">
-          {displayed.map((m) => {
-            const isEditing = editingId === m.id;
-            return (
-              <div key={`${m.tipo}-${m.id}`} className="flex items-center gap-3 px-4 py-2.5">
-                {/* Icon */}
-                <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${m.color}15` }}
-                >
-                  {m.tipo === "ingreso" ? (
-                    <ArrowUpRight className="h-3.5 w-3.5 text-[#4ADE80]" />
-                  ) : (
-                    <ArrowDownRight className="h-3.5 w-3.5" style={{ color: m.color }} />
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {m.categoria}
-                    {m.familyMember && (
-                      <span className="text-[rgba(255,255,255,0.35)] font-normal text-xs"> · {m.familyMember}</span>
-                    )}
-                  </p>
-                  <p className="text-[11px] text-[rgba(255,255,255,0.35)] truncate">
-                    {new Date(m.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
-                    {m.medioPago && ` · ${PAYMENT_METHOD_LABELS[m.medioPago] || m.medioPago}`}
-                    {m.descripcion && ` — ${m.descripcion}`}
-                  </p>
-                </div>
-
-                {/* Amount / edit */}
-                {isEditing ? (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editMonto}
-                      onChange={(e) => setEditMonto(e.target.value)}
-                      className="h-7 w-24 rounded-md text-xs bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.12)] text-white tabular-nums"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") saveEdit(m);
-                        if (e.key === "Escape") setEditingId(null);
-                      }}
-                    />
-                    <button
-                      onClick={() => saveEdit(m)}
-                      disabled={saving}
-                      className="p-1 rounded text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)]"
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="p-1 rounded text-[rgba(255,255,255,0.3)] hover:text-white"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+          {displayed.map((m) => (
+            <div
+              key={`${m.tipo}-${m.id}`}
+              className={`flex items-center gap-3 px-4 py-2.5 ${canEdit ? "active:bg-[rgba(255,255,255,0.04)] cursor-pointer" : ""} transition-colors`}
+              onClick={() => canEdit && setEditingMovement(m)}
+            >
+              {/* Icon */}
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: `${m.color}15` }}
+              >
+                {m.tipo === "ingreso" ? (
+                  <ArrowUpRight className="h-3.5 w-3.5 text-[#4ADE80]" />
                 ) : (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className={`text-sm font-semibold tabular-nums ${m.tipo === "ingreso" ? "text-[#4ADE80]" : "text-white"}`}>
-                      {m.tipo === "ingreso" ? "+" : "-"}{formatCurrency(m.monto, m.moneda)}
-                    </span>
-                    <button
-                      onClick={() => startEdit(m)}
-                      className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#7B61FF] transition-colors"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(m)}
-                      className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#FF6B6B] transition-colors"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
+                  <ArrowDownRight className="h-3.5 w-3.5" style={{ color: m.color }} />
                 )}
               </div>
-            );
-          })}
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {m.categoria}
+                  {m.familyMember && (
+                    <span className="text-[rgba(255,255,255,0.35)] font-normal text-xs"> · {m.familyMember}</span>
+                  )}
+                </p>
+                <p className="text-[11px] text-[rgba(255,255,255,0.35)] truncate">
+                  {new Date(m.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
+                  {m.medioPago && ` · ${PAYMENT_METHOD_LABELS[m.medioPago] || m.medioPago}`}
+                  {m.descripcion && ` — ${m.descripcion}`}
+                </p>
+              </div>
+
+              {/* Amount + actions */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className={`text-sm font-semibold tabular-nums ${m.tipo === "ingreso" ? "text-[#4ADE80]" : "text-white"}`}>
+                  {m.tipo === "ingreso" ? "+" : "-"}{formatCurrency(m.monto, m.moneda)}
+                </span>
+                {canEdit && (
+                  <button
+                    onClick={(e) => handleDelete(e, m)}
+                    className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#FF6B6B] transition-colors"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
+      )}
+
+      {/* Edit Sheet */}
+      {canEdit && (
+        <Sheet
+          open={!!editingMovement}
+          onOpenChange={(open) => !open && setEditingMovement(null)}
+        >
+          <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto rounded-t-2xl bg-[#0F1335] border-[rgba(255,255,255,0.1)]">
+            <SheetHeader>
+              <SheetTitle className="text-lg text-white">
+                {editingMovement?.tipo === "ingreso" ? "Editar Ingreso" : "Editar Gasto"}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 px-1">
+              {editingMovement?.tipo === "gasto" && expenseCategories && (
+                <ExpenseForm
+                  categories={expenseCategories}
+                  trips={trips || []}
+                  creditCards={creditCards}
+                  familyMembers={familyMembers}
+                  expense={{
+                    id: editingMovement.id,
+                    monto: editingMovement.monto,
+                    moneda: editingMovement.moneda,
+                    categoryId: editingMovement.categoryId,
+                    tripId: editingMovement.tripId || null,
+                    familyMemberId: editingMovement.familyMemberId || null,
+                    creditCardId: editingMovement.creditCardId || null,
+                    fecha: editingMovement.fecha,
+                    descripcion: editingMovement.descripcion,
+                    medioPago: editingMovement.medioPago || "efectivo",
+                  }}
+                  onSuccess={() => setEditingMovement(null)}
+                />
+              )}
+              {editingMovement?.tipo === "ingreso" && incomeCategories && (
+                <IncomeForm
+                  categories={incomeCategories}
+                  income={{
+                    id: editingMovement.id,
+                    monto: editingMovement.monto,
+                    moneda: editingMovement.moneda,
+                    categoryId: editingMovement.categoryId,
+                    fecha: editingMovement.fecha,
+                    descripcion: editingMovement.descripcion,
+                    medioPago: editingMovement.medioPago || "efectivo",
+                  }}
+                  onSuccess={() => setEditingMovement(null)}
+                />
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );

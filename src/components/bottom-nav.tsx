@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Receipt, Plane, TrendingUp, Settings } from "lucide-react";
+import { Home, ArrowLeftRight, Plane, BarChart3, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Inicio", icon: Home },
-  { href: "/gastos", label: "Gastos", icon: Receipt },
+  { href: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
   { href: "/viajes", label: "Viajes", icon: Plane },
-  { href: "/inversiones", label: "Inversión", icon: TrendingUp },
+  { href: "/reportes", label: "Reportes", icon: BarChart3 },
   { href: "/categorias", label: "Ajustes", icon: Settings },
 ];
 

@@ -6,7 +6,7 @@ import { getCurrentUser } from "./auth";
 
 function revalidateAll() {
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
 }
 
 export async function getIncomes(filters?: { month?: number; year?: number }) {

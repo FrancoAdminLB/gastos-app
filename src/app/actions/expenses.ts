@@ -26,7 +26,7 @@ async function getConversion(monto: number, moneda: string, tripId: string | nul
 
 function revalidateAll() {
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
   revalidatePath("/reportes");
   revalidatePath("/viajes");
 }

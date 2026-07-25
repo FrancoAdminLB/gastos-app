@@ -105,7 +105,7 @@ export async function updateCategory(id: string, formData: FormData) {
 
   revalidatePath("/categorias");
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
 }
 
 export async function deleteCategory(id: string) {

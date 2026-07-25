@@ -106,7 +106,7 @@ export function ImportForm({ categories }: { categories: Category[] }) {
     setPreview(null);
 
     setTimeout(() => {
-      router.push("/gastos");
+      router.push("/movimientos");
     }, 1000);
   }
 

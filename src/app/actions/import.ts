@@ -46,7 +46,7 @@ export async function confirmImport(data: {
   });
 
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
 }
 
 // Simple keyword-based category matching

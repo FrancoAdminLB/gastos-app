@@ -25,7 +25,7 @@ export async function createFamilyMember(formData: FormData) {
 
   revalidatePath("/categorias");
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
   revalidatePath("/reportes");
 }
 
@@ -43,7 +43,7 @@ export async function updateFamilyMember(id: string, formData: FormData) {
   await prisma.familyMember.update({ where: { id }, data });
   revalidatePath("/categorias");
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
   revalidatePath("/reportes");
 }
 
@@ -54,6 +54,6 @@ export async function deleteFamilyMember(id: string) {
   await prisma.familyMember.delete({ where: { id } });
   revalidatePath("/categorias");
   revalidatePath("/");
-  revalidatePath("/gastos");
+  revalidatePath("/movimientos");
   revalidatePath("/reportes");
 }
