@@ -11,18 +11,11 @@ import { SavingsGoals } from "@/components/savings-goals";
 import { FinancialCalendar } from "@/components/financial-calendar";
 import { formatCurrency } from "@/lib/format";
 import { Wallet } from "lucide-react";
+import { Suspense } from "react";
 
-export default async function HomePage() {
-  const [dashboardData, expenseCategories, incomeCategories, trips, creditCards, familyMembers, savingsGoals, financialEvents] = await Promise.all([
-    getDashboardData(),
-    getExpenseCategories(),
-    getIncomeCategories(),
-    getTrips(),
-    getCreditCards(),
-    getFamilyMembers(),
-    getSavingsGoals(),
-    getFinancialEvents(),
-  ]);
+// Main dashboard data — critical, loaded first
+async function DashboardContent() {
+  const dashboardData = await getDashboardData();
 
   if (!dashboardData) {
     return (
@@ -36,7 +29,7 @@ export default async function HomePage() {
   const patrimonioTotal = currentMonth.balance + dashboardData.investments.total;
 
   return (
-    <div className="space-y-5">
+    <>
       {/* Hero Balance Card */}
       <div className="rounded-2xl gradient-card glow-primary p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2" />
@@ -63,20 +56,73 @@ export default async function HomePage() {
 
       {/* Dashboard Charts & Financial Health */}
       <DashboardCharts data={dashboardData} />
+    </>
+  );
+}
 
-      {/* Savings Goals */}
+// Secondary sections — can stream in
+async function SecondaryContent() {
+  const [savingsGoals, financialEvents, creditCards] = await Promise.all([
+    getSavingsGoals(),
+    getFinancialEvents(),
+    getCreditCards(),
+  ]);
+
+  return (
+    <>
       <SavingsGoals goals={savingsGoals} />
-
-      {/* Financial Calendar */}
       <FinancialCalendar events={financialEvents} creditCards={creditCards} />
+    </>
+  );
+}
 
-      <QuickAddButton
-        categories={expenseCategories}
-        incomeCategories={incomeCategories}
-        trips={trips}
-        creditCards={creditCards}
-        familyMembers={familyMembers}
-      />
+// FAB data — least critical
+async function QuickAddContent() {
+  const [expenseCategories, incomeCategories, trips, creditCards, familyMembers] = await Promise.all([
+    getExpenseCategories(),
+    getIncomeCategories(),
+    getTrips(),
+    getCreditCards(),
+    getFamilyMembers(),
+  ]);
+
+  return (
+    <QuickAddButton
+      categories={expenseCategories}
+      incomeCategories={incomeCategories}
+      trips={trips}
+      creditCards={creditCards}
+      familyMembers={familyMembers}
+    />
+  );
+}
+
+export default function HomePage() {
+  return (
+    <div className="space-y-5">
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardContent />
+      </Suspense>
+      <Suspense fallback={null}>
+        <SecondaryContent />
+      </Suspense>
+      <Suspense fallback={null}>
+        <QuickAddContent />
+      </Suspense>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-5 animate-pulse">
+      <div className="rounded-2xl bg-[rgba(255,255,255,0.06)] h-40" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl bg-[rgba(255,255,255,0.06)] h-24" />
+        <div className="rounded-xl bg-[rgba(255,255,255,0.06)] h-24" />
+        <div className="rounded-xl bg-[rgba(255,255,255,0.06)] h-24" />
+        <div className="rounded-xl bg-[rgba(255,255,255,0.06)] h-24" />
+      </div>
     </div>
   );
 }

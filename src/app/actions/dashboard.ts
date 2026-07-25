@@ -15,18 +15,41 @@ export async function getDashboardData() {
   const [expenses, incomes, investmentAccounts] = await Promise.all([
     prisma.expense.findMany({
       where: { ...userFilter, fecha: { gte: sixMonthsAgo } },
-      include: { category: true, familyMember: true },
+      select: {
+        id: true,
+        monto: true,
+        moneda: true,
+        fecha: true,
+        descripcion: true,
+        medioPago: true,
+        tripId: true,
+        categoryId: true,
+        category: { select: { nombre: true, color: true } },
+        familyMember: { select: { nombre: true } },
+      },
       orderBy: { fecha: "desc" },
     }),
     prisma.income.findMany({
       where: { ...userFilter, fecha: { gte: sixMonthsAgo } },
-      include: { category: true },
+      select: {
+        id: true,
+        monto: true,
+        fecha: true,
+        descripcion: true,
+        categoryId: true,
+        category: { select: { nombre: true, color: true } },
+      },
       orderBy: { fecha: "desc" },
     }),
     prisma.investmentAccount.findMany({
-      include: {
+      select: {
+        nombre: true,
+        tipo: true,
+        color: true,
+        saldoActual: true,
+        moneda: true,
         movimientos: {
-          orderBy: { fecha: "desc" },
+          select: { tipo: true, monto: true },
         },
       },
     }),

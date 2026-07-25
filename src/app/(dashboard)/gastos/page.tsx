@@ -6,19 +6,19 @@ import { getFamilyMembers } from "@/app/actions/family-members";
 import { QuickAddButton } from "@/components/quick-add-button";
 import { ExpenseList } from "@/components/expense-list";
 import { Receipt } from "lucide-react";
+import { Suspense } from "react";
 
-export default async function GastosPage() {
-  const [expenses, categories, incomeCategories, trips, creditCards, familyMembers] = await Promise.all([
+async function ExpenseContent() {
+  const [expenses, categories, trips, creditCards, familyMembers] = await Promise.all([
     getExpenses(),
     getExpenseCategories(),
-    getIncomeCategories(),
     getTrips(),
     getCreditCards(),
     getFamilyMembers(),
   ]);
 
   return (
-    <div className="space-y-5">
+    <>
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-white">Gastos</h2>
         <span className="text-sm text-[rgba(255,255,255,0.4)]">{expenses.length} registros</span>
@@ -43,14 +43,39 @@ export default async function GastosPage() {
           familyMembers={familyMembers}
         />
       )}
+    </>
+  );
+}
 
-      <QuickAddButton
-        categories={categories}
-        incomeCategories={incomeCategories}
-        trips={trips}
-        creditCards={creditCards}
-        familyMembers={familyMembers}
-      />
+async function QuickAddContent() {
+  const [categories, incomeCategories, trips, creditCards, familyMembers] = await Promise.all([
+    getExpenseCategories(),
+    getIncomeCategories(),
+    getTrips(),
+    getCreditCards(),
+    getFamilyMembers(),
+  ]);
+
+  return (
+    <QuickAddButton
+      categories={categories}
+      incomeCategories={incomeCategories}
+      trips={trips}
+      creditCards={creditCards}
+      familyMembers={familyMembers}
+    />
+  );
+}
+
+export default function GastosPage() {
+  return (
+    <div className="space-y-5">
+      <Suspense fallback={<div className="space-y-3 animate-pulse"><div className="h-8 w-32 rounded bg-[rgba(255,255,255,0.06)]" /><div className="h-20 rounded-xl bg-[rgba(255,255,255,0.06)]" /><div className="h-20 rounded-xl bg-[rgba(255,255,255,0.06)]" /></div>}>
+        <ExpenseContent />
+      </Suspense>
+      <Suspense fallback={null}>
+        <QuickAddContent />
+      </Suspense>
     </div>
   );
 }
