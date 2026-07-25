@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./auth";
 
 export async function getSavingsGoals() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   return prisma.savingsGoal.findMany({
     orderBy: { createdAt: "asc" },
   });

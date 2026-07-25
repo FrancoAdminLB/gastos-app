@@ -4,8 +4,11 @@ import { parseExpenseText } from "@/lib/expense-parser";
 import { createExpenseFromImport } from "./expenses";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "./auth";
 
 export async function parseAndPreview(text: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   const parsed = parseExpenseText(text);
   if (!parsed) return null;
 
@@ -31,6 +34,8 @@ export async function confirmImport(data: {
   descripcion: string;
   medioPago: "tarjeta_debito" | "tarjeta_credito" | "transferencia" | "efectivo" | "otro";
 }) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   await createExpenseFromImport({
     monto: data.monto,
     moneda: data.moneda,

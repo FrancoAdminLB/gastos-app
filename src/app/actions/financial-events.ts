@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./auth";
 
 export async function getFinancialEvents() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   return prisma.financialEvent.findMany({
     orderBy: { dia: "asc" },
   });

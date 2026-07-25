@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./auth";
 
 export async function getInvestmentAccounts() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   return prisma.investmentAccount.findMany({
     include: {
       movimientos: {
@@ -17,6 +19,8 @@ export async function getInvestmentAccounts() {
 }
 
 export async function getInvestmentSummary() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   const accounts = await prisma.investmentAccount.findMany();
   const totalInvertido = accounts.reduce((sum, a) => sum + a.saldoActual, 0);
   return { totalInvertido, cuentas: accounts.length };

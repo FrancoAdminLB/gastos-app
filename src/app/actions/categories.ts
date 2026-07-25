@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./auth";
 
 export async function getCategories() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   return prisma.category.findMany({
     include: {
       children: {
@@ -19,12 +21,16 @@ export async function getCategories() {
 }
 
 export async function getCategoriesFlat() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   return prisma.category.findMany({
     orderBy: { nombre: "asc" },
   });
 }
 
 export async function getExpenseCategories() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   return prisma.category.findMany({
     where: { tipo: { not: "ingreso" } },
     include: {
@@ -40,6 +46,8 @@ export async function getExpenseCategories() {
 }
 
 export async function getIncomeCategories() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   return prisma.category.findMany({
     where: { tipo: "ingreso" },
     orderBy: { nombre: "asc" },

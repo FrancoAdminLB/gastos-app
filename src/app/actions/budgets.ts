@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./auth";
 
 export async function getBudgets() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
   return prisma.budget.findMany({
     include: { category: true, trip: true },
     orderBy: { createdAt: "desc" },
