@@ -21,8 +21,10 @@ export async function createTrip(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autenticado");
 
-  const nombre = formData.get("nombre") as string;
+  const nombre = (formData.get("nombre") as string)?.trim();
+  if (!nombre) throw new Error("Nombre requerido");
   const fechaInicio = new Date(formData.get("fechaInicio") as string);
+  if (isNaN(fechaInicio.getTime())) throw new Error("Fecha de inicio inválida");
   const fechaFinStr = formData.get("fechaFin") as string;
   const fechaFin = fechaFinStr ? new Date(fechaFinStr) : null;
   const monedaBase = (formData.get("monedaBase") as string) || "USD";

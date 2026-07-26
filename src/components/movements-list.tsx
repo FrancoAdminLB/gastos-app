@@ -223,12 +223,15 @@ export function MovementsList({
 
   async function handleDelete() {
     if (!deleteTarget) return;
-    if (deleteTarget.tipo === "gasto") {
-      await deleteExpense(deleteTarget.id);
-    } else {
-      await deleteIncome(deleteTarget.id);
+    try {
+      if (deleteTarget.tipo === "gasto") {
+        await deleteExpense(deleteTarget.id);
+      } else {
+        await deleteIncome(deleteTarget.id);
+      }
+    } finally {
+      setDeleteTarget(null);
     }
-    setDeleteTarget(null);
   }
 
   function exportPdf() {
@@ -317,6 +320,7 @@ export function MovementsList({
             <div
               key={`${m.tipo}-${m.id}`}
               className={`flex items-center gap-3 px-4 py-2.5 ${canEdit ? "active:bg-[rgba(255,255,255,0.04)] cursor-pointer" : ""} transition-colors`}
+              {...(canEdit ? { role: "button" as const, tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setEditingMovement(m); } } } : {})}
               onClick={() => canEdit && setEditingMovement(m)}
             >
               {/* Icon */}

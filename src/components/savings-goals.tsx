@@ -103,15 +103,21 @@ export function SavingsGoals({ goals }: { goals: Goal[] }) {
   async function handleAddFunds(goal: Goal) {
     const amount = parseFloat(addAmount);
     if (isNaN(amount) || amount <= 0) return;
-    await updateSavingsGoalAmount(goal.id, goal.montoActual + amount);
-    setUpdatingId(null);
-    setAddAmount("");
+    try {
+      await updateSavingsGoalAmount(goal.id, goal.montoActual + amount);
+    } finally {
+      setUpdatingId(null);
+      setAddAmount("");
+    }
   }
 
   async function handleDelete() {
     if (!deleteId) return;
-    await deleteSavingsGoal(deleteId);
-    setDeleteId(null);
+    try {
+      await deleteSavingsGoal(deleteId);
+    } finally {
+      setDeleteId(null);
+    }
   }
 
   function daysRemaining(fecha: Date | null): string | null {

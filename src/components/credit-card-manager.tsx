@@ -54,8 +54,11 @@ export function CreditCardManager({
 
   async function handleDelete() {
     if (!deleteId) return;
-    await deleteCreditCard(deleteId);
-    setDeleteId(null);
+    try {
+      await deleteCreditCard(deleteId);
+    } finally {
+      setDeleteId(null);
+    }
   }
 
   function openEdit(card: CreditCardData) {

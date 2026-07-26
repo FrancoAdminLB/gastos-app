@@ -60,7 +60,8 @@ export async function createCategory(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
 
-  const nombre = formData.get("nombre") as string;
+  const nombre = (formData.get("nombre") as string)?.trim();
+  if (!nombre) throw new Error("Nombre requerido");
   const icono = (formData.get("icono") as string) || "receipt";
   const color = (formData.get("color") as string) || "#6B7280";
   const tipo = (formData.get("tipo") as string) || "ambos";
@@ -101,7 +102,8 @@ export async function updateCategory(id: string, formData: FormData) {
   const category = await prisma.category.findUnique({ where: { id } });
   if (!category || category.userId !== user.id) throw new Error("No autorizado");
 
-  const nombre = formData.get("nombre") as string;
+  const nombre = (formData.get("nombre") as string)?.trim();
+  if (!nombre) throw new Error("Nombre requerido");
   const color = (formData.get("color") as string) || undefined;
 
   const data: Record<string, unknown> = { nombre };

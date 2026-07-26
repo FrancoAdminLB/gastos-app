@@ -49,14 +49,20 @@ export function FamilyMemberManager({
     if (!editingName.trim()) return;
     const formData = new FormData();
     formData.set("nombre", editingName.trim());
-    await updateFamilyMember(id, formData);
-    setEditingId(null);
+    try {
+      await updateFamilyMember(id, formData);
+    } finally {
+      setEditingId(null);
+    }
   }
 
   async function handleDelete() {
     if (!deleteId) return;
-    await deleteFamilyMember(deleteId);
-    setDeleteId(null);
+    try {
+      await deleteFamilyMember(deleteId);
+    } finally {
+      setDeleteId(null);
+    }
   }
 
   return (

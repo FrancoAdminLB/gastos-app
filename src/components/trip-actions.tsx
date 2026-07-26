@@ -23,7 +23,7 @@ import { Plus } from "lucide-react";
 
 const CURRENCIES = ["ARS", "USD", "EUR", "BRL", "CLP", "UYU", "GBP"];
 
-export function TripActions({ categories: _categories }: { categories: unknown[] }) {
+export function TripActions() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 

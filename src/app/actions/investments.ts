@@ -33,15 +33,18 @@ export async function createInvestmentAccount(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");
 
-  const nombre = formData.get("nombre") as string;
-  if (!nombre?.trim()) throw new Error("Nombre requerido");
+  const nombre = (formData.get("nombre") as string)?.trim();
+  if (!nombre) throw new Error("Nombre requerido");
+  const VALID_TYPES = ["cripto", "bolsa", "online", "banco", "otro"];
   const tipo = (formData.get("tipo") as string) || "otro";
+  if (!VALID_TYPES.includes(tipo)) throw new Error("Tipo inválido");
   const moneda = (formData.get("moneda") as string) || "ARS";
   const color = (formData.get("color") as string) || "#F59E0B";
   const saldoInicial = parseFloat((formData.get("saldoInicial") as string) || "0");
+  if (isNaN(saldoInicial) || saldoInicial < 0) throw new Error("Saldo inicial inválido");
 
   const account = await prisma.investmentAccount.create({
-    data: { userId: user.id, nombre, tipo, moneda, color, saldoActual: isNaN(saldoInicial) ? 0 : saldoInicial },
+    data: { userId: user.id, nombre, tipo, moneda, color, saldoActual: saldoInicial },
   });
 
   if (saldoInicial > 0) {

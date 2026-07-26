@@ -168,14 +168,20 @@ export function InvestmentPortfolio({ accounts }: { accounts: Account[] }) {
 
   async function handleDeleteAccount() {
     if (!deleteAccountId) return;
-    await deleteInvestmentAccount(deleteAccountId);
-    setDeleteAccountId(null);
+    try {
+      await deleteInvestmentAccount(deleteAccountId);
+    } finally {
+      setDeleteAccountId(null);
+    }
   }
 
   async function handleDeleteMovement() {
     if (!deleteMovementId) return;
-    await deleteInvestmentMovement(deleteMovementId);
-    setDeleteMovementId(null);
+    try {
+      await deleteInvestmentMovement(deleteMovementId);
+    } finally {
+      setDeleteMovementId(null);
+    }
   }
 
   return (

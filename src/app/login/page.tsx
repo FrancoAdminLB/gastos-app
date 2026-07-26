@@ -93,10 +93,11 @@ export default function LoginPage() {
         ) : resetMode ? (
           <form onSubmit={handleResetPassword} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[rgba(255,255,255,0.45)] uppercase tracking-widest">
+              <label htmlFor="reset-email" className="text-xs font-medium text-[rgba(255,255,255,0.45)] uppercase tracking-widest">
                 Email
               </label>
               <Input
+                id="reset-email"
                 type="email"
                 placeholder="tu@email.com"
                 value={email}
@@ -130,10 +131,11 @@ export default function LoginPage() {
         ) : (
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[rgba(255,255,255,0.45)] uppercase tracking-widest">
+              <label htmlFor="login-email" className="text-xs font-medium text-[rgba(255,255,255,0.45)] uppercase tracking-widest">
                 Email
               </label>
               <Input
+                id="login-email"
                 type="email"
                 placeholder="tu@email.com"
                 value={email}
@@ -143,10 +145,11 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-medium text-[rgba(255,255,255,0.45)] uppercase tracking-widest">
+              <label htmlFor="login-password" className="text-xs font-medium text-[rgba(255,255,255,0.45)] uppercase tracking-widest">
                 Contraseña
               </label>
               <Input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

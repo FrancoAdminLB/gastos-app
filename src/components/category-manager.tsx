@@ -101,22 +101,31 @@ export function CategoryManager({
 
   async function handleDeleteCategory() {
     if (!deleteCatId) return;
-    await deleteCategory(deleteCatId);
-    setDeleteCatId(null);
+    try {
+      await deleteCategory(deleteCatId);
+    } finally {
+      setDeleteCatId(null);
+    }
   }
 
   async function handleDeleteBudget() {
     if (!deleteBudgetId) return;
-    await deleteBudget(deleteBudgetId);
-    setDeleteBudgetId(null);
+    try {
+      await deleteBudget(deleteBudgetId);
+    } finally {
+      setDeleteBudgetId(null);
+    }
   }
 
   async function handleRename(id: string) {
     if (!editingName.trim()) return;
     const formData = new FormData();
     formData.set("nombre", editingName.trim());
-    await updateCategory(id, formData);
-    setEditingId(null);
+    try {
+      await updateCategory(id, formData);
+    } finally {
+      setEditingId(null);
+    }
   }
 
   function startEditing(cat: CategoryChild) {

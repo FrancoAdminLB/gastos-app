@@ -39,6 +39,7 @@ export async function createIncome(formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   if (!categoryId) throw new Error("Categoría requerida");
   const fecha = new Date(formData.get("fecha") as string);
+  if (isNaN(fecha.getTime())) throw new Error("Fecha inválida");
   const descripcion = (formData.get("descripcion") as string) || null;
   const medioPago = (formData.get("medioPago") as string) || "efectivo";
 
@@ -83,6 +84,7 @@ export async function updateIncome(id: string, formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   if (!categoryId) throw new Error("Categoría requerida");
   const fecha = new Date(formData.get("fecha") as string);
+  if (isNaN(fecha.getTime())) throw new Error("Fecha inválida");
   const descripcion = (formData.get("descripcion") as string) || null;
   const medioPago = (formData.get("medioPago") as string) || "efectivo";
 

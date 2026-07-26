@@ -1,21 +1,17 @@
 import { getTrips } from "@/app/actions/trips";
-import { getExpenseCategories } from "@/app/actions/categories";
 import { TripActions } from "@/components/trip-actions";
 import { formatDate, formatCurrency } from "@/lib/format";
 import Link from "next/link";
 import { Plane, ChevronRight } from "lucide-react";
 
 export default async function ViajesPage() {
-  const [trips, categories] = await Promise.all([
-    getTrips(),
-    getExpenseCategories(),
-  ]);
+  const trips = await getTrips();
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-white">Viajes</h2>
-        <TripActions categories={categories} />
+        <TripActions />
       </div>
 
       {trips.length === 0 ? (

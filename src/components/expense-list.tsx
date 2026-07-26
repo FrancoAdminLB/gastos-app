@@ -98,7 +98,10 @@ export function ExpenseList({
           <div
             key={expense.id}
             className="flex items-center gap-3 px-4 py-3 active:bg-[rgba(255,255,255,0.04)] transition-colors cursor-pointer"
+            role="button"
+            tabIndex={0}
             onClick={() => setEditingExpense(expense)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setEditingExpense(expense); } }}
           >
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"

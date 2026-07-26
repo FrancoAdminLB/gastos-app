@@ -42,6 +42,7 @@ export async function createExpense(formData: FormData) {
   if (!categoryId) throw new Error("Categoría requerida");
   const tripId = (formData.get("tripId") as string) || null;
   const fecha = new Date(formData.get("fecha") as string);
+  if (isNaN(fecha.getTime())) throw new Error("Fecha inválida");
   const descripcion = (formData.get("descripcion") as string) || null;
   const medioPago = (formData.get("medioPago") as string) || "efectivo";
   const familyMemberId = (formData.get("familyMemberId") as string) || null;
@@ -163,6 +164,7 @@ export async function updateExpense(id: string, formData: FormData) {
   if (!categoryId) throw new Error("Categoría requerida");
   const tripId = (formData.get("tripId") as string) || null;
   const fecha = new Date(formData.get("fecha") as string);
+  if (isNaN(fecha.getTime())) throw new Error("Fecha inválida");
   const descripcion = (formData.get("descripcion") as string) || null;
   const medioPago = (formData.get("medioPago") as string) || "efectivo";
   const familyMemberId = (formData.get("familyMemberId") as string) || null;

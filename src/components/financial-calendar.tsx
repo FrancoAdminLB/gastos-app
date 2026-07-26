@@ -167,8 +167,11 @@ export function FinancialCalendar({
 
   async function handleDelete() {
     if (!deleteId || deleteId.startsWith("cc-")) return;
-    await deleteFinancialEvent(deleteId);
-    setDeleteId(null);
+    try {
+      await deleteFinancialEvent(deleteId);
+    } finally {
+      setDeleteId(null);
+    }
   }
 
   return (

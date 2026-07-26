@@ -52,29 +52,33 @@ async function createDefaultCategories(userId: string) {
   const existing = await prisma.category.count({ where: { userId } });
   if (existing > 0) return;
 
-  for (const cat of DEFAULT_CATEGORIES) {
-    const catId = `${userId.slice(0, 8)}-${cat.id}`;
-    await prisma.category.create({
-      data: {
-        id: catId,
-        userId,
-        nombre: cat.nombre,
-        tipo: cat.tipo as "gasto_diario" | "viaje" | "ambos" | "ingreso",
-        color: cat.color,
-      },
-    });
-    for (const child of cat.children) {
-      await prisma.category.create({
-        data: {
-          id: `${userId.slice(0, 8)}-${child.id}`,
-          userId,
-          nombre: child.nombre,
-          color: child.color,
-          tipo: cat.tipo as "gasto_diario" | "viaje" | "ambos" | "ingreso",
-          parentId: catId,
-        },
-      });
-    }
+  const prefix = userId.slice(0, 8);
+
+  // Batch create parent categories
+  await prisma.category.createMany({
+    data: DEFAULT_CATEGORIES.map((cat) => ({
+      id: `${prefix}-${cat.id}`,
+      userId,
+      nombre: cat.nombre,
+      tipo: cat.tipo as "gasto_diario" | "viaje" | "ambos" | "ingreso",
+      color: cat.color,
+    })),
+  });
+
+  // Batch create child categories
+  const children = DEFAULT_CATEGORIES.flatMap((cat) =>
+    cat.children.map((child) => ({
+      id: `${prefix}-${child.id}`,
+      userId,
+      nombre: child.nombre,
+      color: child.color,
+      tipo: cat.tipo as "gasto_diario" | "viaje" | "ambos" | "ingreso",
+      parentId: `${prefix}-${cat.id}`,
+    }))
+  );
+
+  if (children.length > 0) {
+    await prisma.category.createMany({ data: children });
   }
 }
 
