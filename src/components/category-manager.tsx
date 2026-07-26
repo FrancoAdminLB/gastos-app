@@ -60,6 +60,7 @@ export function CategoryManager({
   isAdmin: boolean;
 }) {
   const [catOpen, setCatOpen] = useState(false);
+  const [catFormKey, setCatFormKey] = useState(0);
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -135,7 +136,7 @@ export function CategoryManager({
 
   function openNewSubcategory(parentId: string, parentTipo: string) {
     setParentForNew(parentId);
-    // Pre-set the tipo based on parent
+    setCatFormKey((k) => k + 1);
     setCatOpen(true);
   }
 
@@ -265,7 +266,7 @@ export function CategoryManager({
             }}>
               <button
                 className="flex items-center gap-1 text-xs rounded-lg h-8 px-3 border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-white hover:bg-[rgba(255,255,255,0.1)] transition-colors"
-                onClick={() => { setParentForNew(null); setCatOpen(true); }}
+                onClick={() => { setParentForNew(null); setCatFormKey((k) => k + 1); setCatOpen(true); }}
               >
                 <Plus className="h-3.5 w-3.5" />
                 Nueva
@@ -293,7 +294,7 @@ export function CategoryManager({
           {isAdmin && (
             <button
               className="flex items-center gap-1 text-xs rounded-lg h-8 px-3 border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-white hover:bg-[rgba(255,255,255,0.1)] transition-colors"
-              onClick={() => { setParentForNew(null); setCatOpen(true); }}
+              onClick={() => { setParentForNew(null); setCatFormKey((k) => k + 1); setCatOpen(true); }}
             >
               <Plus className="h-3.5 w-3.5" />
               Nueva
@@ -427,7 +428,7 @@ export function CategoryManager({
               Dentro de: {categories.flatMap(c => [c, ...(c.children || [])]).find(c => c.id === parentForNew)?.nombre}
             </p>
           )}
-          <form onSubmit={handleCreateCategory} className="space-y-5 mt-4 px-1">
+          <form key={catFormKey} onSubmit={handleCreateCategory} className="space-y-5 mt-4 px-1">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Nombre</Label>
               <Input name="nombre" placeholder="Ej: Electricidad" required className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.2)] focus:border-[#7B61FF] focus:ring-[#7B61FF]/20" />

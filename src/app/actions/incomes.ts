@@ -10,7 +10,7 @@ function revalidateAll() {
   revalidatePath("/reportes");
 }
 
-export async function getIncomes(filters?: { month?: number; year?: number }) {
+export async function getIncomes(filters?: { month?: number; year?: number; since?: Date }) {
   const user = await getCurrentUser();
   if (!user) return [];
 
@@ -20,6 +20,10 @@ export async function getIncomes(filters?: { month?: number; year?: number }) {
     const startDate = new Date(filters.year, filters.month, 1);
     const endDate = new Date(filters.year, filters.month + 1, 1);
     where.fecha = { gte: startDate, lt: endDate };
+  } else if (filters?.year !== undefined) {
+    where.fecha = { gte: new Date(filters.year, 0, 1), lt: new Date(filters.year + 1, 0, 1) };
+  } else if (filters?.since) {
+    where.fecha = { gte: filters.since };
   }
 
   return prisma.income.findMany({

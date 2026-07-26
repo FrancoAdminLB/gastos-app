@@ -77,6 +77,7 @@ export function FinancialCalendar({
   creditCards: CreditCardData[];
 }) {
   const [open, setOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const now = new Date();
@@ -182,7 +183,7 @@ export function FinancialCalendar({
         </h3>
         <button
           className="flex items-center gap-1 text-xs rounded-lg h-8 px-3 border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.06)] text-white hover:bg-[rgba(255,255,255,0.1)] transition-colors"
-          onClick={() => setOpen(true)}
+          onClick={() => { setFormKey((k) => k + 1); setOpen(true); }}
         >
           <Plus className="h-3.5 w-3.5" />
           Evento
@@ -358,7 +359,7 @@ export function FinancialCalendar({
           <SheetHeader>
             <SheetTitle className="text-lg text-white">Nuevo Evento Financiero</SheetTitle>
           </SheetHeader>
-          <form onSubmit={handleCreate} className="space-y-4 mt-4 px-1">
+          <form key={formKey} onSubmit={handleCreate} className="space-y-4 mt-4 px-1">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Nombre</Label>
               <Input

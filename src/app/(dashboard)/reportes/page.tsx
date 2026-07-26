@@ -14,7 +14,7 @@ async function ReportsContent() {
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
   const [allExpenses, categories, familyMembers, incomeCategories, trips, creditCards] = await Promise.all([
-    getExpenses(),
+    getExpenses({ since: sixMonthsAgo }),
     getExpenseCategories(),
     getFamilyMembers(),
     getIncomeCategories(),
@@ -22,9 +22,7 @@ async function ReportsContent() {
     getCreditCards(),
   ]);
 
-  const expenses = allExpenses.filter(
-    (e) => new Date(e.fecha) >= sixMonthsAgo
-  );
+  const expenses = allExpenses;
 
   const currentMonthExpenses = allExpenses.filter((e) => {
     const d = new Date(e.fecha);

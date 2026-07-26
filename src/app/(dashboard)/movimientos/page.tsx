@@ -10,9 +10,10 @@ import { ArrowLeftRight } from "lucide-react";
 import { Suspense } from "react";
 
 async function MovimientosContent() {
+  const currentYear = new Date().getFullYear();
   const [expenses, incomes, expenseCategories, incomeCategories, trips, creditCards, familyMembers] = await Promise.all([
-    getExpenses(),
-    getIncomes(),
+    getExpenses({ year: currentYear }),
+    getIncomes({ year: currentYear }),
     getExpenseCategories(),
     getIncomeCategories(),
     getTrips(),
