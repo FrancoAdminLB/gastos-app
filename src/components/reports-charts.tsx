@@ -11,6 +11,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import { formatCurrency } from "@/lib/format";
 
 interface Expense {
   id: string;
@@ -104,39 +105,49 @@ export function ReportsCharts({
             Gastos por categoria
           </h3>
           <div className="rounded-xl glass p-4">
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="total"
-                  nameKey="nombre"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={85}
-                  paddingAngle={3}
-                  cornerRadius={4}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} stroke="none" />
-                  ))}
-                </Pie>
-                <Tooltip formatter={formatTooltip} contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
-            {/* Legend */}
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {pieData.map((cat) => {
-                const pct = totalDaily > 0 ? ((cat.total / totalDaily) * 100).toFixed(0) : "0";
-                return (
-                  <div key={cat.nombre} className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                    <span className="text-xs text-[rgba(255,255,255,0.45)] truncate">
-                      {cat.nombre} <span className="font-medium text-white">{pct}%</span>
-                    </span>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-4">
+              {/* Chart */}
+              <div className="w-[130px] h-[130px] shrink-0 relative overflow-hidden">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="total"
+                      nameKey="nombre"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={32}
+                      outerRadius={58}
+                      paddingAngle={3}
+                      cornerRadius={4}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={index} fill={entry.color} stroke="none" />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Center label */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <p className="text-[9px] text-[rgba(255,255,255,0.35)] uppercase tracking-wider">Total</p>
+                  <p className="text-[11px] font-bold text-white tabular-nums">{formatCurrency(totalDaily)}</p>
+                </div>
+              </div>
+              {/* Legend */}
+              <div className="flex-1 min-w-0 space-y-2.5">
+                {pieData.map((cat) => {
+                  const pct = totalDaily > 0 ? ((cat.total / totalDaily) * 100).toFixed(0) : "0";
+                  return (
+                    <div key={cat.nombre} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                        <span className="text-xs text-[rgba(255,255,255,0.6)] truncate">{cat.nombre}</span>
+                      </div>
+                      <span className="text-xs font-semibold text-white tabular-nums shrink-0">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
