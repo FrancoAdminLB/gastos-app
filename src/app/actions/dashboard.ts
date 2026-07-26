@@ -3,6 +3,66 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "./auth";
 
+function getBillingPeriod(diaCierre: number, now: Date) {
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+
+  // If we're past the closing day, current period started this month
+  // If we're before/on closing day, current period started last month
+  let periodStart: Date;
+  let periodEnd: Date;
+  let prevPeriodStart: Date;
+
+  if (day > diaCierre) {
+    // Current period: diaCierre+1 of this month → diaCierre of next month
+    periodStart = new Date(year, month, diaCierre + 1);
+    periodEnd = new Date(year, month + 1, diaCierre, 23, 59, 59);
+    prevPeriodStart = new Date(year, month - 1, diaCierre + 1);
+  } else {
+    // Current period: diaCierre+1 of last month → diaCierre of this month
+    periodStart = new Date(year, month - 1, diaCierre + 1);
+    periodEnd = new Date(year, month, diaCierre, 23, 59, 59);
+    prevPeriodStart = new Date(year, month - 2, diaCierre + 1);
+  }
+
+  return { periodStart, periodEnd, prevPeriodStart, prevPeriodEnd: new Date(periodStart.getTime() - 1) };
+}
+
+function getNextDueDate(diaCierre: number, diaVencimiento: number, now: Date): Date {
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+
+  // The due date is for the LAST closed period
+  // If cierre=23 and vencimiento=4:
+  //   - Period closes on the 23rd
+  //   - Payment is due on the 4th of the NEXT month after closing
+
+  if (diaVencimiento > diaCierre) {
+    // Due date is in the same month as closing
+    if (day > diaCierre) {
+      // Period just closed this month, due this month
+      const dueDate = new Date(year, month, diaVencimiento);
+      return dueDate >= now ? dueDate : new Date(year, month + 1, diaVencimiento);
+    } else {
+      // Period closed last month, due this month
+      const dueDate = new Date(year, month, diaVencimiento);
+      return dueDate >= now ? dueDate : new Date(year, month + 1, diaVencimiento);
+    }
+  } else {
+    // Due date is in the month AFTER closing (most common: cierre 23, vto 4)
+    if (day > diaCierre) {
+      // Period just closed this month, due next month
+      return new Date(year, month + 1, diaVencimiento);
+    } else {
+      // Period closed last month, due this month
+      const dueDate = new Date(year, month, diaVencimiento);
+      return dueDate >= now ? dueDate : new Date(year, month + 1, diaVencimiento);
+    }
+  }
+}
+
 export async function getDashboardData() {
   const user = await getCurrentUser();
   if (!user) return null;
@@ -12,7 +72,7 @@ export async function getDashboardData() {
 
   const userFilter = { userId: user.id };
 
-  const [expenses, incomes, investmentAccounts] = await Promise.all([
+  const [expenses, incomes, investmentAccounts, creditCards] = await Promise.all([
     prisma.expense.findMany({
       where: { ...userFilter, fecha: { gte: sixMonthsAgo } },
       select: {
@@ -24,6 +84,7 @@ export async function getDashboardData() {
         medioPago: true,
         tripId: true,
         categoryId: true,
+        creditCardId: true,
         category: { select: { nombre: true, color: true } },
         familyMember: { select: { nombre: true } },
       },
@@ -54,9 +115,106 @@ export async function getDashboardData() {
         },
       },
     }),
+    prisma.creditCard.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        nombre: true,
+        ultimos4: true,
+        diaCierre: true,
+        diaVencimiento: true,
+        color: true,
+      },
+    }),
   ]);
 
-  // Monthly breakdown (6 months)
+  // === CREDIT CARD DEBT CALCULATION ===
+  const ccExpensesAll = expenses.filter((e) => e.medioPago === "tarjeta_credito" && !e.tripId);
+
+  const creditCardDebt: {
+    cardId: string;
+    nombre: string;
+    ultimos4: string | null;
+    color: string;
+    periodoActual: number;
+    proximoPago: number;
+    proximoVencimiento: string | null;
+    total: number;
+  }[] = [];
+
+  let totalCcDebt = 0;
+
+  for (const card of creditCards) {
+    const cardExpenses = ccExpensesAll.filter((e) => e.creditCardId === card.id);
+
+    if (card.diaCierre) {
+      const { periodStart, prevPeriodStart, prevPeriodEnd } = getBillingPeriod(card.diaCierre, now);
+
+      // Current open period (not yet closed)
+      const periodoActual = cardExpenses
+        .filter((e) => new Date(e.fecha) >= periodStart)
+        .reduce((s, e) => s + e.monto, 0);
+
+      // Last closed period (closed, due on vencimiento)
+      const proximoPago = cardExpenses
+        .filter((e) => {
+          const d = new Date(e.fecha);
+          return d >= prevPeriodStart && d <= prevPeriodEnd;
+        })
+        .reduce((s, e) => s + e.monto, 0);
+
+      const proximoVencimiento = card.diaVencimiento
+        ? getNextDueDate(card.diaCierre, card.diaVencimiento, now).toISOString()
+        : null;
+
+      const total = periodoActual + proximoPago;
+      totalCcDebt += total;
+
+      creditCardDebt.push({
+        cardId: card.id,
+        nombre: card.nombre,
+        ultimos4: card.ultimos4,
+        color: card.color,
+        periodoActual: Math.round(periodoActual * 100) / 100,
+        proximoPago: Math.round(proximoPago * 100) / 100,
+        proximoVencimiento,
+        total: Math.round(total * 100) / 100,
+      });
+    } else {
+      // Card without billing dates — just sum all current month CC expenses
+      const total = cardExpenses
+        .filter((e) => {
+          const d = new Date(e.fecha);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        })
+        .reduce((s, e) => s + e.monto, 0);
+
+      totalCcDebt += total;
+
+      creditCardDebt.push({
+        cardId: card.id,
+        nombre: card.nombre,
+        ultimos4: card.ultimos4,
+        color: card.color,
+        periodoActual: Math.round(total * 100) / 100,
+        proximoPago: 0,
+        proximoVencimiento: null,
+        total: Math.round(total * 100) / 100,
+      });
+    }
+  }
+
+  // Also sum CC expenses without a specific card assigned
+  const unassignedCc = ccExpensesAll
+    .filter((e) => !e.creditCardId)
+    .filter((e) => {
+      const d = new Date(e.fecha);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    })
+    .reduce((s, e) => s + e.monto, 0);
+  totalCcDebt += unassignedCc;
+
+  // Monthly breakdown (6 months) — EXCLUDE CC expenses from gastos/ahorro
   const monthlyData: {
     month: string;
     monthKey: string;
@@ -73,7 +231,7 @@ export async function getDashboardData() {
     const monthExpenses = expenses
       .filter((e) => {
         const ed = new Date(e.fecha);
-        return ed.getMonth() === d.getMonth() && ed.getFullYear() === d.getFullYear() && !e.tripId;
+        return ed.getMonth() === d.getMonth() && ed.getFullYear() === d.getFullYear() && !e.tripId && e.medioPago !== "tarjeta_credito";
       })
       .reduce((s, e) => s + e.monto, 0);
 
@@ -93,25 +251,27 @@ export async function getDashboardData() {
     });
   }
 
-  // Current month
+  // Current month — EXCLUDE CC from cash expenses
   const currentMonthExpenses = expenses.filter((e) => {
     const ed = new Date(e.fecha);
     return ed.getMonth() === now.getMonth() && ed.getFullYear() === now.getFullYear() && !e.tripId;
   });
+  const currentMonthCashExpenses = currentMonthExpenses.filter((e) => e.medioPago !== "tarjeta_credito");
   const currentMonthIncomes = incomes.filter((inc) => {
     const id = new Date(inc.fecha);
     return id.getMonth() === now.getMonth() && id.getFullYear() === now.getFullYear();
   });
 
-  const totalExpenses = currentMonthExpenses.reduce((s, e) => s + e.monto, 0);
+  const totalCashExpenses = currentMonthCashExpenses.reduce((s, e) => s + e.monto, 0);
+  const totalAllExpenses = currentMonthExpenses.reduce((s, e) => s + e.monto, 0);
   const totalIncome = currentMonthIncomes.reduce((s, i) => s + i.monto, 0);
 
-  // Previous month for comparison
+  // Previous month for comparison (cash only)
   const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const prevMonthExpenses = expenses
+  const prevMonthCashExpenses = expenses
     .filter((e) => {
       const ed = new Date(e.fecha);
-      return ed.getMonth() === prevMonth.getMonth() && ed.getFullYear() === prevMonth.getFullYear() && !e.tripId;
+      return ed.getMonth() === prevMonth.getMonth() && ed.getFullYear() === prevMonth.getFullYear() && !e.tripId && e.medioPago !== "tarjeta_credito";
     })
     .reduce((s, e) => s + e.monto, 0);
   const prevMonthIncomes = incomes
@@ -121,7 +281,7 @@ export async function getDashboardData() {
     })
     .reduce((s, inc) => s + inc.monto, 0);
 
-  // Category breakdown (current month)
+  // Category breakdown (current month) — ALL expenses including CC (tracks spending)
   const byCategory: { nombre: string; color: string; total: number }[] = [];
   const catMap = new Map<string, { nombre: string; color: string; total: number }>();
   for (const exp of currentMonthExpenses) {
@@ -171,11 +331,11 @@ export async function getDashboardData() {
     moneda: a.moneda,
   }));
 
-  // Daily spending trend (current month)
+  // Daily spending trend (current month — cash only, excludes CC)
   const dailySpending: { day: string; total: number }[] = [];
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   for (let d = 1; d <= daysInMonth; d++) {
-    const dayTotal = currentMonthExpenses
+    const dayTotal = currentMonthCashExpenses
       .filter((e) => new Date(e.fecha).getDate() === d)
       .reduce((s, e) => s + e.monto, 0);
     dailySpending.push({ day: String(d), total: dayTotal });
@@ -208,18 +368,13 @@ export async function getDashboardData() {
     .slice(0, 8);
 
   // === FINANCIAL HEALTH INDICATORS ===
-
-  // Average expenses over previous months (exclude current)
   const prevMonthsExpenses = monthlyData.slice(0, -1).filter((m) => m.gastos > 0);
   const avgExpenses = prevMonthsExpenses.length > 0
     ? prevMonthsExpenses.reduce((s, m) => s + m.gastos, 0) / prevMonthsExpenses.length
     : 0;
-  const avgIncomes = prevMonthsExpenses.length > 0
-    ? prevMonthsExpenses.reduce((s, m) => s + m.ingresos, 0) / prevMonthsExpenses.length
-    : 0;
 
-  // Liquidity: income/expense ratio
-  const liquidityRatio = totalExpenses > 0 ? totalIncome / totalExpenses : totalIncome > 0 ? 99 : 0;
+  // Liquidity: income/cash-expense ratio
+  const liquidityRatio = totalCashExpenses > 0 ? totalIncome / totalCashExpenses : totalIncome > 0 ? 99 : 0;
   let liquidityLevel: string, liquidityLabel: string;
   if (liquidityRatio >= 1.5) { liquidityLevel = "excelente"; liquidityLabel = "Excelente"; }
   else if (liquidityRatio >= 1.2) { liquidityLevel = "buena"; liquidityLabel = "Buena"; }
@@ -228,7 +383,7 @@ export async function getDashboardData() {
   else { liquidityLevel = "normal"; liquidityLabel = "Sin datos"; }
 
   // Variable expenses vs average
-  const varExpChange = avgExpenses > 0 ? ((totalExpenses - avgExpenses) / avgExpenses) * 100 : 0;
+  const varExpChange = avgExpenses > 0 ? ((totalCashExpenses - avgExpenses) / avgExpenses) * 100 : 0;
   let varExpLevel: string, varExpLabel: string;
   if (varExpChange > 20) { varExpLevel = "alto"; varExpLabel = "Más altos"; }
   else if (varExpChange > 5) { varExpLevel = "normal"; varExpLabel = "Levemente altos"; }
@@ -236,7 +391,7 @@ export async function getDashboardData() {
   else { varExpLevel = "bajo"; varExpLabel = "Más bajos"; }
 
   // Credit card spending vs average
-  const ccExpenses = currentMonthExpenses.filter((e) => e.medioPago === "tarjeta_credito").reduce((s, e) => s + e.monto, 0);
+  const ccExpensesMonth = currentMonthExpenses.filter((e) => e.medioPago === "tarjeta_credito").reduce((s, e) => s + e.monto, 0);
   const prevCcExpenses: number[] = [];
   for (let i = 1; i <= 5; i++) {
     const pm = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -249,14 +404,14 @@ export async function getDashboardData() {
     if (monthCc > 0) prevCcExpenses.push(monthCc);
   }
   const avgCc = prevCcExpenses.length > 0 ? prevCcExpenses.reduce((s, v) => s + v, 0) / prevCcExpenses.length : 0;
-  const ccChange = avgCc > 0 ? ((ccExpenses - avgCc) / avgCc) * 100 : 0;
+  const ccChange = avgCc > 0 ? ((ccExpensesMonth - avgCc) / avgCc) * 100 : 0;
   let ccLevel: string, ccLabel: string;
   if (ccChange > 15) { ccLevel = "por_encima"; ccLabel = "Por encima"; }
   else if (ccChange >= -15) { ccLevel = "normal"; ccLabel = "Normal"; }
   else { ccLevel = "por_debajo"; ccLabel = "Por debajo"; }
 
-  // Savings rate
-  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0;
+  // Savings rate (based on cash flow)
+  const savingsRate = totalIncome > 0 ? ((totalIncome - totalCashExpenses) / totalIncome) * 100 : 0;
   let savingsLevel: string, savingsLabel: string;
   if (savingsRate >= 30) { savingsLevel = "excelente"; savingsLabel = "Excelente"; }
   else if (savingsRate >= 15) { savingsLevel = "buena"; savingsLabel = "Buena"; }
@@ -274,11 +429,17 @@ export async function getDashboardData() {
   return {
     monthlyData,
     currentMonth: {
-      totalExpenses,
+      totalExpenses: totalCashExpenses,
+      totalAllExpenses: totalAllExpenses,
       totalIncome,
-      balance: totalIncome - totalExpenses,
-      expenseChange: prevMonthExpenses > 0 ? ((totalExpenses - prevMonthExpenses) / prevMonthExpenses) * 100 : 0,
+      balance: totalIncome - totalCashExpenses,
+      expenseChange: prevMonthCashExpenses > 0 ? ((totalCashExpenses - prevMonthCashExpenses) / prevMonthCashExpenses) * 100 : 0,
       incomeChange: prevMonthIncomes > 0 ? ((totalIncome - prevMonthIncomes) / prevMonthIncomes) * 100 : 0,
+    },
+    creditCardDebt: {
+      total: Math.round(totalCcDebt * 100) / 100,
+      unassigned: Math.round(unassignedCc * 100) / 100,
+      cards: creditCardDebt,
     },
     byCategory,
     incomeBySource,

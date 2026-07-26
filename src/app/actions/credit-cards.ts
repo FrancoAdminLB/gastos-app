@@ -20,17 +20,27 @@ export async function createCreditCard(formData: FormData) {
   const nombre = formData.get("nombre") as string;
   if (!nombre?.trim()) throw new Error("Nombre requerido");
   const ultimos4 = (formData.get("ultimos4") as string) || null;
-  const fechaCierre = formData.get("fechaCierre") as string;
-  const fechaVencimiento = formData.get("fechaVencimiento") as string;
+  const diaCierreStr = formData.get("diaCierre") as string;
+  const diaVencimientoStr = formData.get("diaVencimiento") as string;
   const color = (formData.get("color") as string) || "#3B82F6";
+
+  const diaCierre = diaCierreStr ? parseInt(diaCierreStr) : null;
+  const diaVencimiento = diaVencimientoStr ? parseInt(diaVencimientoStr) : null;
+
+  if (diaCierre !== null && (isNaN(diaCierre) || diaCierre < 1 || diaCierre > 31)) {
+    throw new Error("Día de cierre inválido (1-31)");
+  }
+  if (diaVencimiento !== null && (isNaN(diaVencimiento) || diaVencimiento < 1 || diaVencimiento > 31)) {
+    throw new Error("Día de vencimiento inválido (1-31)");
+  }
 
   await prisma.creditCard.create({
     data: {
       userId: user.id,
       nombre,
       ultimos4,
-      fechaCierre: fechaCierre ? new Date(fechaCierre) : null,
-      fechaVencimiento: fechaVencimiento ? new Date(fechaVencimiento) : null,
+      diaCierre,
+      diaVencimiento,
       color,
     },
   });
@@ -50,10 +60,18 @@ export async function updateCreditCard(id: string, formData: FormData) {
   const data: Record<string, unknown> = {};
   const nombre = formData.get("nombre") as string | null;
   if (nombre) data.nombre = nombre;
-  const fechaCierre = formData.get("fechaCierre") as string | null;
-  if (fechaCierre !== null) data.fechaCierre = fechaCierre ? new Date(fechaCierre) : null;
-  const fechaVencimiento = formData.get("fechaVencimiento") as string | null;
-  if (fechaVencimiento !== null) data.fechaVencimiento = fechaVencimiento ? new Date(fechaVencimiento) : null;
+  const ultimos4 = formData.get("ultimos4") as string | null;
+  if (ultimos4 !== null) data.ultimos4 = ultimos4 || null;
+
+  const diaCierreStr = formData.get("diaCierre") as string | null;
+  if (diaCierreStr !== null) {
+    data.diaCierre = diaCierreStr ? parseInt(diaCierreStr) : null;
+  }
+  const diaVencimientoStr = formData.get("diaVencimiento") as string | null;
+  if (diaVencimientoStr !== null) {
+    data.diaVencimiento = diaVencimientoStr ? parseInt(diaVencimientoStr) : null;
+  }
+
   const color = formData.get("color") as string | null;
   if (color) data.color = color;
 

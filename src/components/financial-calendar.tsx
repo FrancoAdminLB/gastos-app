@@ -50,8 +50,8 @@ interface FinancialEvent {
 interface CreditCardData {
   id: string;
   nombre: string;
-  fechaCierre: Date | null;
-  fechaVencimiento: Date | null;
+  diaCierre: number | null;
+  diaVencimiento: number | null;
   color: string;
 }
 
@@ -85,26 +85,24 @@ export function FinancialCalendar({
   // Auto-generate credit card events
   const autoEvents: FinancialEvent[] = [];
   for (const card of creditCards) {
-    if (card.fechaCierre) {
-      const d = new Date(card.fechaCierre).getDate();
+    if (card.diaCierre) {
       autoEvents.push({
         id: `cc-cierre-${card.id}`,
         nombre: `Cierre ${card.nombre}`,
         tipo: "vencimiento_tarjeta",
-        dia: d,
+        dia: card.diaCierre,
         monto: null,
         recurrente: true,
         color: card.color,
         notas: null,
       });
     }
-    if (card.fechaVencimiento) {
-      const d = new Date(card.fechaVencimiento).getDate();
+    if (card.diaVencimiento) {
       autoEvents.push({
         id: `cc-vto-${card.id}`,
         nombre: `Vto. ${card.nombre}`,
         tipo: "vencimiento_tarjeta",
-        dia: d,
+        dia: card.diaVencimiento,
         monto: null,
         recurrente: true,
         color: "#FF6B6B",

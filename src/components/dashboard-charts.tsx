@@ -28,6 +28,8 @@ import {
   Globe,
   Banknote,
   MoreHorizontal,
+  CreditCard,
+  Calendar,
 } from "lucide-react";
 
 interface DashboardData {
@@ -40,10 +42,25 @@ interface DashboardData {
   }[];
   currentMonth: {
     totalExpenses: number;
+    totalAllExpenses?: number;
     totalIncome: number;
     balance: number;
     expenseChange: number;
     incomeChange: number;
+  };
+  creditCardDebt?: {
+    total: number;
+    unassigned: number;
+    cards: {
+      cardId: string;
+      nombre: string;
+      ultimos4: string | null;
+      color: string;
+      periodoActual: number;
+      proximoPago: number;
+      proximoVencimiento: string | null;
+      total: number;
+    }[];
   };
   byCategory: { nombre: string; color: string; total: number }[];
   incomeBySource: { nombre: string; color: string; total: number }[];
@@ -110,10 +127,11 @@ function ChangeIndicator({ value, invert }: { value: number; invert?: boolean })
 }
 
 export function DashboardCharts({ data }: { data: DashboardData }) {
-  const { currentMonth, monthlyData, byCategory, incomeBySource, investments, dailySpending, recentTransactions } = data;
+  const { currentMonth, creditCardDebt, monthlyData, byCategory, incomeBySource, investments, dailySpending, recentTransactions } = data;
   const totalCatExpenses = byCategory.reduce((s, c) => s + c.total, 0);
-  const hasAnyData = currentMonth.totalExpenses > 0 || currentMonth.totalIncome > 0;
+  const hasAnyData = currentMonth.totalExpenses > 0 || currentMonth.totalIncome > 0 || (creditCardDebt?.total ?? 0) > 0;
   const hasHistory = monthlyData.some((m) => m.ingresos > 0 || m.gastos > 0);
+  const hasCcDebt = creditCardDebt && creditCardDebt.total > 0;
 
   return (
     <div className="space-y-5">
@@ -139,7 +157,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
             </div>
             <ChangeIndicator value={currentMonth.expenseChange} invert />
           </div>
-          <p className="text-[10px] text-[rgba(255,255,255,0.4)] uppercase tracking-widest">Gastos</p>
+          <p className="text-[10px] text-[rgba(255,255,255,0.4)] uppercase tracking-widest">Gastos efectivo</p>
           <p className="text-base font-bold text-white tabular-nums mt-0.5">
             {formatCurrency(currentMonth.totalExpenses)}
           </p>
@@ -178,6 +196,60 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
           </div>
         </Link>
       </div>
+
+      {/* Credit Card Debt */}
+      {hasCcDebt && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">
+            Deuda Tarjetas
+          </h3>
+          <div className="rounded-xl glass p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[rgba(251,146,60,0.15)] flex items-center justify-center">
+                  <CreditCard className="h-4 w-4 text-[#FB923C]" />
+                </div>
+                <span className="text-xs text-[rgba(255,255,255,0.5)] uppercase tracking-widest">Total deuda</span>
+              </div>
+              <span className="text-lg font-bold text-[#FB923C] tabular-nums">
+                {formatCurrency(creditCardDebt!.total)}
+              </span>
+            </div>
+            {creditCardDebt!.cards.map((card) => (
+              <div key={card.cardId} className="border-t border-[rgba(255,255,255,0.06)] pt-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: card.color }} />
+                    <span className="text-sm font-medium text-white">
+                      {card.nombre}
+                      {card.ultimos4 && <span className="text-[rgba(255,255,255,0.4)] font-normal"> *{card.ultimos4}</span>}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-white tabular-nums">{formatCurrency(card.total)}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-[rgba(255,255,255,0.04)] px-3 py-2">
+                    <p className="text-[9px] text-[rgba(255,255,255,0.4)] uppercase tracking-widest">Período actual</p>
+                    <p className="text-xs font-semibold text-white tabular-nums mt-0.5">{formatCurrency(card.periodoActual)}</p>
+                  </div>
+                  <div className="rounded-lg bg-[rgba(255,255,255,0.04)] px-3 py-2">
+                    <p className="text-[9px] text-[rgba(255,255,255,0.4)] uppercase tracking-widest">Próximo pago</p>
+                    <p className="text-xs font-semibold text-white tabular-nums mt-0.5">{formatCurrency(card.proximoPago)}</p>
+                  </div>
+                </div>
+                {card.proximoVencimiento && (
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <Calendar className="h-3 w-3 text-[rgba(255,255,255,0.4)]" />
+                    <span className="text-[11px] text-[rgba(255,255,255,0.5)]">
+                      Vence: {new Date(card.proximoVencimiento).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Financial Health — only show when there's meaningful data */}
       {hasAnyData && <FinancialHealth data={data.financialHealth} />}

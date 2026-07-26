@@ -109,15 +109,15 @@ model FamilyMember {
 }
 
 model CreditCard {
-  id               String    @id @default(uuid())
-  userId           String    @map("user_id")
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
   nombre           String
-  ultimos4         String?   @map("ultimos_4")
-  fechaCierre      DateTime? @map("fecha_cierre")
-  fechaVencimiento DateTime? @map("fecha_vencimiento")
-  color            String    @default("#3B82F6")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  ultimos4         String?  @map("ultimos_4")
+  diaCierre        Int?     @map("dia_cierre")
+  diaVencimiento   Int?     @map("dia_vencimiento")
+  color            String   @default("#3B82F6")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   user     User      @relation(fields: [userId], references: [id])
   expenses Expense[]

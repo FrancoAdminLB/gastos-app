@@ -17,8 +17,8 @@ interface CreditCardData {
   id: string;
   nombre: string;
   ultimos4: string | null;
-  fechaCierre: Date | null;
-  fechaVencimiento: Date | null;
+  diaCierre: number | null;
+  diaVencimiento: number | null;
   color: string;
 }
 
@@ -65,11 +65,6 @@ export function CreditCardManager({
     setOpen(true);
   }
 
-  function formatCardDate(date: Date | null) {
-    if (!date) return "—";
-    return new Date(date).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
-  }
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -101,30 +96,32 @@ export function CreditCardManager({
                 <p className="text-sm font-medium text-white">
                   {card.nombre}
                   {card.ultimos4 && (
-                    <span className="text-[rgba(255,255,255,0.35)] font-normal"> *{card.ultimos4}</span>
+                    <span className="text-[rgba(255,255,255,0.5)] font-normal"> *{card.ultimos4}</span>
                   )}
                 </p>
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="flex items-center gap-1 text-xs text-[rgba(255,255,255,0.4)]">
                     <Calendar className="h-2.5 w-2.5" />
-                    Cierre: <span className="text-white font-medium">{formatCardDate(card.fechaCierre)}</span>
+                    Cierre: <span className="text-white font-medium">{card.diaCierre ?? "—"}</span>
                   </span>
                   <span className="flex items-center gap-1 text-xs text-[rgba(255,255,255,0.4)]">
-                    Vto: <span className="text-white font-medium">{formatCardDate(card.fechaVencimiento)}</span>
+                    Vto: <span className="text-white font-medium">{card.diaVencimiento ?? "—"}</span>
                   </span>
                 </div>
               </div>
               {isAdmin && (
                 <div className="flex items-center gap-0.5 shrink-0">
                   <button
-                    className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#7B61FF] hover:bg-[rgba(123,97,255,0.1)] transition-colors"
+                    className="p-2 rounded-lg text-[rgba(255,255,255,0.4)] hover:text-[#7B61FF] hover:bg-[rgba(123,97,255,0.1)] transition-colors"
                     onClick={() => openEdit(card)}
+                    aria-label="Editar tarjeta"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
                   <button
-                    className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
+                    className="p-2 rounded-lg text-[rgba(255,255,255,0.4)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
                     onClick={() => handleDelete(card.id)}
+                    aria-label="Eliminar tarjeta"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -172,21 +169,27 @@ export function CreditCardManager({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Fecha cierre</Label>
+                <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Día de cierre</Label>
                 <Input
-                  name="fechaCierre"
-                  type="date"
-                  defaultValue={editCard?.fechaCierre ? new Date(editCard.fechaCierre).toISOString().split("T")[0] : ""}
-                  className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white focus:border-[#7B61FF] focus:ring-[#7B61FF]/20"
+                  name="diaCierre"
+                  type="number"
+                  min={1}
+                  max={31}
+                  placeholder="23"
+                  defaultValue={editCard?.diaCierre || ""}
+                  className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.2)] focus:border-[#7B61FF] focus:ring-[#7B61FF]/20"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Fecha vencimiento</Label>
+                <Label className="text-xs font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.4)]">Día de vencimiento</Label>
                 <Input
-                  name="fechaVencimiento"
-                  type="date"
-                  defaultValue={editCard?.fechaVencimiento ? new Date(editCard.fechaVencimiento).toISOString().split("T")[0] : ""}
-                  className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white focus:border-[#7B61FF] focus:ring-[#7B61FF]/20"
+                  name="diaVencimiento"
+                  type="number"
+                  min={1}
+                  max={31}
+                  placeholder="4"
+                  defaultValue={editCard?.diaVencimiento || ""}
+                  className="h-12 rounded-xl bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.08)] text-white placeholder:text-[rgba(255,255,255,0.2)] focus:border-[#7B61FF] focus:ring-[#7B61FF]/20"
                 />
               </div>
             </div>
