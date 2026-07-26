@@ -12,6 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Plus, Trash2, Pencil, Check, X, Users } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface FamilyMember {
   id: string;
@@ -30,6 +31,7 @@ export function FamilyMemberManager({
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,9 +53,10 @@ export function FamilyMemberManager({
     setEditingId(null);
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Eliminar este miembro?")) return;
-    await deleteFamilyMember(id);
+  async function handleDelete() {
+    if (!deleteId) return;
+    await deleteFamilyMember(deleteId);
+    setDeleteId(null);
   }
 
   return (
@@ -118,7 +121,7 @@ export function FamilyMemberManager({
                   </button>
                   <button
                     className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
-                    onClick={() => handleDelete(member.id)}
+                    onClick={() => setDeleteId(member.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -170,6 +173,14 @@ export function FamilyMemberManager({
           </form>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Eliminar miembro"
+        description="Se eliminará este miembro de la familia."
+      />
     </div>
   );
 }

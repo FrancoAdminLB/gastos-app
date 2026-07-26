@@ -12,6 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Plus, Trash2, Pencil, CreditCard, Calendar } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface CreditCardData {
   id: string;
@@ -32,6 +33,7 @@ export function CreditCardManager({
   const [open, setOpen] = useState(false);
   const [editCard, setEditCard] = useState<CreditCardData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -50,9 +52,10 @@ export function CreditCardManager({
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Eliminar esta tarjeta?")) return;
-    await deleteCreditCard(id);
+  async function handleDelete() {
+    if (!deleteId) return;
+    await deleteCreditCard(deleteId);
+    setDeleteId(null);
   }
 
   function openEdit(card: CreditCardData) {
@@ -120,7 +123,7 @@ export function CreditCardManager({
                   </button>
                   <button
                     className="p-2 rounded-lg text-[rgba(255,255,255,0.4)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
-                    onClick={() => handleDelete(card.id)}
+                    onClick={() => setDeleteId(card.id)}
                     aria-label="Eliminar tarjeta"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -212,6 +215,14 @@ export function CreditCardManager({
           </form>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Eliminar tarjeta"
+        description="Se eliminará esta tarjeta de crédito."
+      />
     </div>
   );
 }

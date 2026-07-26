@@ -42,6 +42,7 @@ import {
   Banknote,
   MoreHorizontal,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface Movement {
   id: string;
@@ -85,6 +86,8 @@ export function InvestmentPortfolio({ accounts }: { accounts: Account[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [movementType, setMovementType] = useState("deposito");
+  const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
+  const [deleteMovementId, setDeleteMovementId] = useState<string | null>(null);
 
   const totalPortfolio = accounts.reduce((sum, a) => sum + a.saldoActual, 0);
 
@@ -163,14 +166,16 @@ export function InvestmentPortfolio({ accounts }: { accounts: Account[] }) {
     }
   }
 
-  async function handleDeleteAccount(id: string) {
-    if (!confirm("Eliminar esta cuenta y todos sus movimientos?")) return;
-    await deleteInvestmentAccount(id);
+  async function handleDeleteAccount() {
+    if (!deleteAccountId) return;
+    await deleteInvestmentAccount(deleteAccountId);
+    setDeleteAccountId(null);
   }
 
-  async function handleDeleteMovement(id: string) {
-    if (!confirm("Eliminar este movimiento? Se revertira el saldo.")) return;
-    await deleteInvestmentMovement(id);
+  async function handleDeleteMovement() {
+    if (!deleteMovementId) return;
+    await deleteInvestmentMovement(deleteMovementId);
+    setDeleteMovementId(null);
   }
 
   return (
@@ -320,7 +325,7 @@ export function InvestmentPortfolio({ accounts }: { accounts: Account[] }) {
                     </button>
                     <button
                       className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
-                      onClick={() => handleDeleteAccount(account.id)}
+                      onClick={() => setDeleteAccountId(account.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -373,7 +378,7 @@ export function InvestmentPortfolio({ accounts }: { accounts: Account[] }) {
                             </span>
                             <button
                               className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#FF6B6B] transition-colors"
-                              onClick={() => handleDeleteMovement(mov.id)}
+                              onClick={() => setDeleteMovementId(mov.id)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
@@ -575,6 +580,22 @@ export function InvestmentPortfolio({ accounts }: { accounts: Account[] }) {
           )}
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteAccountId}
+        onOpenChange={(o) => !o && setDeleteAccountId(null)}
+        onConfirm={handleDeleteAccount}
+        title="Eliminar cuenta"
+        description="Se eliminará esta cuenta y todos sus movimientos."
+      />
+
+      <ConfirmDialog
+        open={!!deleteMovementId}
+        onOpenChange={(o) => !o && setDeleteMovementId(null)}
+        onConfirm={handleDeleteMovement}
+        title="Eliminar movimiento"
+        description="Se revertirá el saldo de este movimiento."
+      />
     </div>
   );
 }

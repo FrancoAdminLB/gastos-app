@@ -38,6 +38,30 @@ export async function createBudget(formData: FormData) {
   revalidatePath("/");
 }
 
+export async function updateBudget(id: string, formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autorizado");
+
+  const budget = await prisma.budget.findUnique({ where: { id } });
+  if (!budget || budget.userId !== user.id) throw new Error("No autorizado");
+
+  const data: Record<string, unknown> = {};
+  const montoLimiteStr = formData.get("montoLimite") as string | null;
+  if (montoLimiteStr) {
+    const montoLimite = parseFloat(montoLimiteStr);
+    if (isNaN(montoLimite) || montoLimite <= 0) throw new Error("Monto límite inválido");
+    data.montoLimite = montoLimite;
+  }
+  const periodo = formData.get("periodo") as string | null;
+  if (periodo) data.periodo = periodo;
+  const categoryId = formData.get("categoryId") as string | null;
+  if (categoryId !== null) data.categoryId = categoryId || null;
+
+  await prisma.budget.update({ where: { id }, data });
+  revalidatePath("/categorias");
+  revalidatePath("/");
+}
+
 export async function deleteBudget(id: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autorizado");

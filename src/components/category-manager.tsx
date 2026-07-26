@@ -25,6 +25,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Plus, Trash2, ChevronRight, Pencil, Check, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { formatCurrency } from "@/lib/format";
 
 interface CategoryChild {
@@ -64,6 +65,8 @@ export function CategoryManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [parentForNew, setParentForNew] = useState<string | null>(null);
+  const [deleteCatId, setDeleteCatId] = useState<string | null>(null);
+  const [deleteBudgetId, setDeleteBudgetId] = useState<string | null>(null);
 
   const incomeCategories = categories.filter((c) => c.tipo === "ingreso" && !c.parentId);
   const expenseCategories = categories.filter((c) => c.tipo !== "ingreso" && !c.parentId);
@@ -96,14 +99,16 @@ export function CategoryManager({
     }
   }
 
-  async function handleDeleteCategory(id: string) {
-    if (!confirm("Eliminar esta categoria y todas sus subcategorias?")) return;
-    await deleteCategory(id);
+  async function handleDeleteCategory() {
+    if (!deleteCatId) return;
+    await deleteCategory(deleteCatId);
+    setDeleteCatId(null);
   }
 
-  async function handleDeleteBudget(id: string) {
-    if (!confirm("Eliminar este presupuesto?")) return;
-    await deleteBudget(id);
+  async function handleDeleteBudget() {
+    if (!deleteBudgetId) return;
+    await deleteBudget(deleteBudgetId);
+    setDeleteBudgetId(null);
   }
 
   async function handleRename(id: string) {
@@ -197,7 +202,7 @@ export function CategoryManager({
               )}
               <button
                 className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
-                onClick={() => handleDeleteCategory(cat.id)}
+                onClick={() => setDeleteCatId(cat.id)}
                 title="Eliminar"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -369,7 +374,7 @@ export function CategoryManager({
               {isAdmin && (
                 <button
                   className="p-1.5 rounded-lg text-[rgba(255,255,255,0.3)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
-                  onClick={() => handleDeleteBudget(budget.id)}
+                  onClick={() => setDeleteBudgetId(budget.id)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -383,6 +388,22 @@ export function CategoryManager({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteCatId}
+        onOpenChange={(o) => !o && setDeleteCatId(null)}
+        onConfirm={handleDeleteCategory}
+        title="Eliminar categoría"
+        description="Se eliminará esta categoría y todas sus subcategorías."
+      />
+
+      <ConfirmDialog
+        open={!!deleteBudgetId}
+        onOpenChange={(o) => !o && setDeleteBudgetId(null)}
+        onConfirm={handleDeleteBudget}
+        title="Eliminar presupuesto"
+        description="Se eliminará este presupuesto."
+      />
 
       {/* Create Category Sheet */}
       <Sheet open={catOpen} onOpenChange={(open) => { setCatOpen(open); if (!open) setParentForNew(null); }}>

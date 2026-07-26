@@ -15,6 +15,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   Select,
   SelectContent,
@@ -77,6 +78,7 @@ export function FinancialCalendar({
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const now = new Date();
   const [viewMonth, setViewMonth] = useState(now.getMonth());
   const [viewYear, setViewYear] = useState(now.getFullYear());
@@ -163,10 +165,10 @@ export function FinancialCalendar({
     }
   }
 
-  async function handleDelete(id: string) {
-    if (id.startsWith("cc-")) return; // Can't delete auto-generated
-    if (!confirm("Eliminar este evento?")) return;
-    await deleteFinancialEvent(id);
+  async function handleDelete() {
+    if (!deleteId || deleteId.startsWith("cc-")) return;
+    await deleteFinancialEvent(deleteId);
+    setDeleteId(null);
   }
 
   return (
@@ -290,7 +292,7 @@ export function FinancialCalendar({
                 {!isAuto && (
                   <button
                     className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#FF6B6B] transition-colors"
-                    onClick={() => handleDelete(ev.id)}
+                    onClick={() => setDeleteId(ev.id)}
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
@@ -429,6 +431,14 @@ export function FinancialCalendar({
           </form>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Eliminar evento"
+        description="Se eliminará este evento financiero."
+      />
     </div>
   );
 }

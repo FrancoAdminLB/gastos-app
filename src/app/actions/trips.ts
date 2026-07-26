@@ -43,6 +43,29 @@ export async function createTrip(formData: FormData) {
   revalidatePath("/viajes");
 }
 
+export async function updateTrip(id: string, formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autenticado");
+
+  const trip = await prisma.trip.findUnique({ where: { id } });
+  if (!trip || trip.ownerId !== user.id) throw new Error("No autorizado");
+
+  const data: Record<string, unknown> = {};
+  const nombre = formData.get("nombre") as string | null;
+  if (nombre) data.nombre = nombre;
+  const fechaInicioStr = formData.get("fechaInicio") as string | null;
+  if (fechaInicioStr) data.fechaInicio = new Date(fechaInicioStr);
+  const fechaFinStr = formData.get("fechaFin") as string | null;
+  if (fechaFinStr !== null) data.fechaFin = fechaFinStr ? new Date(fechaFinStr) : null;
+  const monedaBase = formData.get("monedaBase") as string | null;
+  if (monedaBase) data.monedaBase = monedaBase;
+  const presupuestoStr = formData.get("presupuestoTotal") as string | null;
+  if (presupuestoStr !== null) data.presupuestoTotal = presupuestoStr ? parseFloat(presupuestoStr) : null;
+
+  await prisma.trip.update({ where: { id }, data });
+  revalidatePath("/viajes");
+}
+
 export async function deleteTrip(id: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autenticado");

@@ -11,6 +11,7 @@ import {
 import { ExpenseForm } from "./expense-form";
 import { formatCurrency } from "@/lib/format";
 import { Trash2, CreditCard, User } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface Expense {
   id: string;
@@ -77,15 +78,16 @@ export function ExpenseList({
 }) {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  async function handleDelete(e: React.MouseEvent, id: string) {
-    e.stopPropagation();
-    if (!confirm("Eliminar este gasto?")) return;
-    setDeleting(id);
+  async function handleDelete() {
+    if (!deleteId) return;
+    setDeleting(deleteId);
     try {
-      await deleteExpense(id);
+      await deleteExpense(deleteId);
     } finally {
       setDeleting(null);
+      setDeleteId(null);
     }
   }
 
@@ -143,7 +145,7 @@ export function ExpenseList({
               </span>
               <button
                 className="p-1.5 rounded-lg text-[rgba(255,255,255,0.3)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
-                onClick={(e) => handleDelete(e, expense.id)}
+                onClick={(e) => { e.stopPropagation(); setDeleteId(expense.id); }}
                 disabled={deleting === expense.id}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -175,6 +177,14 @@ export function ExpenseList({
           </div>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Eliminar gasto"
+        description="Se eliminará este gasto permanentemente."
+      />
     </>
   );
 }

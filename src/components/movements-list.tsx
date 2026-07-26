@@ -27,6 +27,7 @@ import {
   Trash2,
   FileText,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface Movement {
   id: string;
@@ -206,6 +207,7 @@ export function MovementsList({
   const [period, setPeriod] = useState<Period>("mes");
   const [filter, setFilter] = useState<"todos" | "ingresos" | "egresos">("todos");
   const [editingMovement, setEditingMovement] = useState<Movement | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Movement | null>(null);
 
   const filtered = filterByPeriod(movements, period);
   const displayed = filter === "todos"
@@ -219,15 +221,14 @@ export function MovementsList({
 
   const canEdit = !!expenseCategories && !!incomeCategories;
 
-  async function handleDelete(e: React.MouseEvent, m: Movement) {
-    e.stopPropagation();
-    const label = m.tipo === "ingreso" ? "ingreso" : "gasto";
-    if (!confirm(`Eliminar este ${label}?`)) return;
-    if (m.tipo === "gasto") {
-      await deleteExpense(m.id);
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    if (deleteTarget.tipo === "gasto") {
+      await deleteExpense(deleteTarget.id);
     } else {
-      await deleteIncome(m.id);
+      await deleteIncome(deleteTarget.id);
     }
+    setDeleteTarget(null);
   }
 
   function exportPdf() {
@@ -352,7 +353,7 @@ export function MovementsList({
                 </span>
                 {canEdit && (
                   <button
-                    onClick={(e) => handleDelete(e, m)}
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(m); }}
                     aria-label="Eliminar movimiento"
                     className="p-2 -mr-1 rounded-lg text-[rgba(255,255,255,0.3)] hover:text-[#FF6B6B] active:bg-[rgba(255,107,107,0.1)] transition-colors"
                   >
@@ -418,6 +419,14 @@ export function MovementsList({
           </SheetContent>
         </Sheet>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => !o && setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title={`Eliminar ${deleteTarget?.tipo === "ingreso" ? "ingreso" : "gasto"}`}
+        description={`Se eliminará este ${deleteTarget?.tipo === "ingreso" ? "ingreso" : "gasto"} permanentemente.`}
+      />
     </div>
   );
 }

@@ -36,6 +36,7 @@ import {
   CalendarClock,
   CalendarDays,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface Goal {
   id: string;
@@ -69,6 +70,7 @@ export function SavingsGoals({ goals }: { goals: Goal[] }) {
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [addAmount, setAddAmount] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const byPlazo = {
     corto: goals.filter((g) => g.plazo === "corto"),
@@ -106,9 +108,10 @@ export function SavingsGoals({ goals }: { goals: Goal[] }) {
     setAddAmount("");
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Eliminar este objetivo?")) return;
-    await deleteSavingsGoal(id);
+  async function handleDelete() {
+    if (!deleteId) return;
+    await deleteSavingsGoal(deleteId);
+    setDeleteId(null);
   }
 
   function daysRemaining(fecha: Date | null): string | null {
@@ -150,7 +153,7 @@ export function SavingsGoals({ goals }: { goals: Goal[] }) {
               <div className="flex items-center gap-1">
                 <button
                   className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#FF6B6B] transition-colors"
-                  onClick={() => handleDelete(goal.id)}
+                  onClick={() => setDeleteId(goal.id)}
                 >
                   <Trash2 className="h-3 w-3" />
                 </button>
@@ -434,6 +437,14 @@ export function SavingsGoals({ goals }: { goals: Goal[] }) {
           </form>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Eliminar objetivo"
+        description="Se eliminará este objetivo de ahorro."
+      />
     </div>
   );
 }
