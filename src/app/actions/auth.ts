@@ -99,7 +99,11 @@ export const getCurrentUser = cache(async () => {
   });
 
   // Ensure new users get default categories
-  await createDefaultCategories(dbUser.id);
+  try {
+    await createDefaultCategories(dbUser.id);
+  } catch {
+    // Categories may already exist (race condition) — safe to ignore
+  }
 
   return dbUser;
 });

@@ -12,9 +12,9 @@ export async function parseAndPreview(text: string) {
   const parsed = parseExpenseText(text);
   if (!parsed) return null;
 
-  // Get all non-income categories for matching
+  // Get user's non-income categories for matching
   const categories = await prisma.category.findMany({
-    where: { tipo: { not: "ingreso" } },
+    where: { userId: user.id, tipo: { not: "ingreso" } },
   });
   const categoryMatch = autoMatchCategory(parsed.comercio, categories);
 

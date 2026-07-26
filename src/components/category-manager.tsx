@@ -187,7 +187,7 @@ export function CategoryManager({
               <button
                 className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#7B61FF] hover:bg-[rgba(123,97,255,0.1)] transition-colors"
                 onClick={() => startEditing(cat)}
-                title="Renombrar"
+                aria-label="Renombrar"
               >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
@@ -195,7 +195,7 @@ export function CategoryManager({
                 <button
                   className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)] transition-colors"
                   onClick={() => openNewSubcategory(cat.id, cat.tipo)}
-                  title="Agregar subcategoria"
+                  aria-label="Agregar subcategoría"
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </button>
@@ -203,7 +203,7 @@ export function CategoryManager({
               <button
                 className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
                 onClick={() => setDeleteCatId(cat.id)}
-                title="Eliminar"
+                aria-label="Eliminar"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>

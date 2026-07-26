@@ -75,7 +75,14 @@ export function ImportForm({ categories }: { categories: Category[] }) {
     setPreview(null);
     setSaved(false);
 
-    const result = await parseAndPreview(text.trim());
+    let result: PreviewData | null = null;
+    try {
+      result = await parseAndPreview(text.trim());
+    } catch {
+      setError(true);
+      setLoading(false);
+      return;
+    }
 
     if (result) {
       setPreview(result);
@@ -91,23 +98,28 @@ export function ImportForm({ categories }: { categories: Category[] }) {
     if (!preview || !editCategory) return;
     setSaving(true);
 
-    await confirmImport({
-      monto: parseFloat(editMonto),
-      moneda: preview.moneda,
-      categoryId: editCategory,
-      fecha: preview.fecha,
-      descripcion: preview.comercio,
-      medioPago: preview.medioPago,
-    });
+    try {
+      await confirmImport({
+        monto: parseFloat(editMonto),
+        moneda: preview.moneda,
+        categoryId: editCategory,
+        fecha: preview.fecha,
+        descripcion: preview.comercio,
+        medioPago: preview.medioPago,
+      });
 
-    setSaving(false);
-    setSaved(true);
-    setText("");
-    setPreview(null);
+      setSaved(true);
+      setText("");
+      setPreview(null);
 
-    setTimeout(() => {
-      router.push("/movimientos");
-    }, 1000);
+      setTimeout(() => {
+        router.push("/movimientos");
+      }, 1000);
+    } catch {
+      setError(true);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

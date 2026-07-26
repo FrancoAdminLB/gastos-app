@@ -193,6 +193,7 @@ export function FinancialCalendar({
           <button
             className="p-1.5 rounded-lg text-[rgba(255,255,255,0.4)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] transition-colors"
             onClick={prevMonth}
+            aria-label="Mes anterior"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -202,6 +203,7 @@ export function FinancialCalendar({
           <button
             className="p-1.5 rounded-lg text-[rgba(255,255,255,0.4)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] transition-colors"
             onClick={nextMonth}
+            aria-label="Mes siguiente"
           >
             <ChevronRight className="h-4 w-4" />
           </button>

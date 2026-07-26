@@ -65,11 +65,19 @@ export async function updateCreditCard(id: string, formData: FormData) {
 
   const diaCierreStr = formData.get("diaCierre") as string | null;
   if (diaCierreStr !== null) {
-    data.diaCierre = diaCierreStr ? parseInt(diaCierreStr) : null;
+    const diaCierre = diaCierreStr ? parseInt(diaCierreStr) : null;
+    if (diaCierre !== null && (isNaN(diaCierre) || diaCierre < 1 || diaCierre > 31)) {
+      throw new Error("Día de cierre inválido (1-31)");
+    }
+    data.diaCierre = diaCierre;
   }
   const diaVencimientoStr = formData.get("diaVencimiento") as string | null;
   if (diaVencimientoStr !== null) {
-    data.diaVencimiento = diaVencimientoStr ? parseInt(diaVencimientoStr) : null;
+    const diaVencimiento = diaVencimientoStr ? parseInt(diaVencimientoStr) : null;
+    if (diaVencimiento !== null && (isNaN(diaVencimiento) || diaVencimiento < 1 || diaVencimiento > 31)) {
+      throw new Error("Día de vencimiento inválido (1-31)");
+    }
+    data.diaVencimiento = diaVencimiento;
   }
 
   const color = formData.get("color") as string | null;

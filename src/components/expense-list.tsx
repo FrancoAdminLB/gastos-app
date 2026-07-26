@@ -145,6 +145,7 @@ export function ExpenseList({
               </span>
               <button
                 className="p-1.5 rounded-lg text-[rgba(255,255,255,0.3)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
+                aria-label="Eliminar gasto"
                 onClick={(e) => { e.stopPropagation(); setDeleteId(expense.id); }}
                 disabled={deleting === expense.id}
               >

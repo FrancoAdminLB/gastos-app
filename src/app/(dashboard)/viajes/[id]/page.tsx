@@ -25,7 +25,7 @@ export default async function TripDetailPage({
 
   if (!trip) notFound();
 
-  const totalSpent = trip.expenses.reduce((sum, e) => sum + e.monto, 0);
+  const totalSpent = trip.expenses.reduce((sum, e) => sum + (e.montoConvertido ?? e.monto), 0);
   const mainCurrency = trip.monedaBase;
   const percentage = trip.presupuestoTotal
     ? Math.min((totalSpent / trip.presupuestoTotal) * 100, 100)
@@ -39,12 +39,12 @@ export default async function TripDetailPage({
   for (const exp of trip.expenses) {
     const existing = byCategory.get(exp.categoryId);
     if (existing) {
-      existing.total += exp.monto;
+      existing.total += exp.montoConvertido ?? exp.monto;
     } else {
       byCategory.set(exp.categoryId, {
         nombre: exp.category.nombre,
         color: exp.category.color,
-        total: exp.monto,
+        total: exp.montoConvertido ?? exp.monto,
       });
     }
   }

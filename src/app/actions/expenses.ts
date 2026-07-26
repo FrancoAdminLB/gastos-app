@@ -9,11 +9,11 @@ type PaymentMethod = "efectivo" | "cheque" | "transferencia_bancaria" | "cripto"
 
 const BASE_CURRENCY = "ARS";
 
-async function getConversion(monto: number, moneda: string, tripId: string | null) {
+async function getConversion(monto: number, moneda: string, tripId: string | null, userId: string) {
   let targetCurrency = BASE_CURRENCY;
   if (tripId) {
     const trip = await prisma.trip.findUnique({ where: { id: tripId } });
-    if (trip) targetCurrency = trip.monedaBase;
+    if (trip && trip.ownerId === userId) targetCurrency = trip.monedaBase;
   }
 
   if (moneda === targetCurrency) {
@@ -47,7 +47,7 @@ export async function createExpense(formData: FormData) {
   const familyMemberId = (formData.get("familyMemberId") as string) || null;
   const creditCardId = (formData.get("creditCardId") as string) || null;
 
-  const { montoConvertido, tasaCambio } = await getConversion(monto, moneda, tripId);
+  const { montoConvertido, tasaCambio } = await getConversion(monto, moneda, tripId, user.id);
 
   await prisma.expense.create({
     data: {
@@ -80,7 +80,7 @@ export async function createExpenseFromImport(data: {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autenticado");
 
-  const { montoConvertido, tasaCambio } = await getConversion(data.monto, data.moneda, null);
+  const { montoConvertido, tasaCambio } = await getConversion(data.monto, data.moneda, null, user.id);
 
   await prisma.expense.create({
     data: {
@@ -168,7 +168,7 @@ export async function updateExpense(id: string, formData: FormData) {
   const familyMemberId = (formData.get("familyMemberId") as string) || null;
   const creditCardId = (formData.get("creditCardId") as string) || null;
 
-  const { montoConvertido, tasaCambio } = await getConversion(monto, moneda, tripId);
+  const { montoConvertido, tasaCambio } = await getConversion(monto, moneda, tripId, user.id);
 
   await prisma.expense.update({
     where: { id },

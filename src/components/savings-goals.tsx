@@ -153,6 +153,7 @@ export function SavingsGoals({ goals }: { goals: Goal[] }) {
               <div className="flex items-center gap-1">
                 <button
                   className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#FF6B6B] transition-colors"
+                  aria-label="Eliminar objetivo"
                   onClick={() => setDeleteId(goal.id)}
                 >
                   <Trash2 className="h-3 w-3" />

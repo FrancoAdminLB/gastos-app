@@ -320,12 +320,14 @@ export function InvestmentPortfolio({ accounts }: { accounts: Account[] }) {
                     <button
                       className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#7B61FF] hover:bg-[rgba(123,97,255,0.1)] transition-colors"
                       onClick={() => openEditAccount(account)}
+                      aria-label="Editar cuenta"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                     <button
                       className="p-1.5 rounded-lg text-[rgba(255,255,255,0.25)] hover:text-[#FF6B6B] hover:bg-[rgba(255,107,107,0.1)] transition-colors"
                       onClick={() => setDeleteAccountId(account.id)}
+                      aria-label="Eliminar cuenta"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -379,6 +381,7 @@ export function InvestmentPortfolio({ accounts }: { accounts: Account[] }) {
                             <button
                               className="p-1 rounded text-[rgba(255,255,255,0.2)] hover:text-[#FF6B6B] transition-colors"
                               onClick={() => setDeleteMovementId(mov.id)}
+                              aria-label="Eliminar movimiento"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
